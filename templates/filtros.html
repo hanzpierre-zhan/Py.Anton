@@ -1,0 +1,486 @@
+{% extends 'base.html' %}
+
+{% block title %}Filtros Maestros{% endblock %}
+
+{% block content %}
+<div class="p-8 max-w-7xl mx-auto">
+    <div class="flex justify-between items-end mb-10">
+        <div>
+            <h2 class="text-4xl font-extrabold tracking-tight text-white">Filtros Maestros</h2>
+            <p class="text-lg font-medium text-slate-400">Crea columnas virtuales basadas en mapeos de criterios.</p>
+        </div>
+        <div class="flex gap-3">
+            <button onclick="openConfigModal()" class="ios-btn ios-btn-secondary flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4">
+                    </path>
+                </svg>
+                Configurar Columnas
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtros y Gestión -->
+    <div class="ios-card overflow-hidden">
+        <div class="p-6 bg-slate-900/50 border-b border-slate-700 flex justify-between items-center">
+            <div class="flex gap-4 items-center">
+                <label class="text-[10px] font-black uppercase text-slate-500">Columna Criterio:</label>
+                <select id="criterioSelector" onchange="loadMapeos()"
+                    class="bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-sm font-bold text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20">
+                    <option value="">Selecciona una columna...</option>
+                </select>
+            </div>
+            <button onclick="addNewMapeoRow()" class="ios-btn ios-btn-primary text-sm flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Nuevo Mapeo
+            </button>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse" id="mapeosTable">
+                <thead>
+                    <tr class="bg-slate-900/80">
+                        <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-500 border-b border-slate-700">
+                            Valor en Columna Criterio</th>
+                        <!-- Columnas virtuales dinámicas aquí -->
+                        <th id="dynamicHeaders" class="p-0 border-b border-slate-700"></th>
+                        <th
+                            class="px-6 py-4 text-[10px] font-black uppercase text-slate-500 border-b border-slate-700 w-20 text-center">
+                            Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="mapeosBody">
+                    <!-- Filas dinámicas -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Configuración de Columnas Virtuales -->
+<div id="configModal"
+    class="hidden fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-[200]">
+    <div class="ios-card p-10 max-w-lg w-full">
+        <h3 class="text-2xl font-bold mb-6">Columnas Virtuales</h3>
+        <p class="text-xs text-slate-500 mb-6 font-bold uppercase tracking-widest leading-relaxed">
+            Estas columnas no existen en tus datos reales. Se llenarán según los mapeos que definas.
+        </p>
+
+        <div class="space-y-4 mb-8" id="virtualColsList">
+            <!-- Items de columnas -->
+        </div>
+
+        <div class="flex gap-2 mb-8">
+            <input type="text" id="newVirtualColName" placeholder="Nombre nueva columna (ej: MERCADO)"
+                class="flex-1 bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none font-bold text-blue-600">
+            <button onclick="addVirtualCol()" class="ios-btn ios-btn-primary px-6">Añadir</button>
+        </div>
+
+        <div class="flex justify-end pt-4 border-t border-slate-100">
+            <button onclick="$('#configModal').addClass('hidden')" class="ios-btn ios-btn-secondary">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Seleccionar Valor Criterio -->
+<div id="valueModal" class="hidden fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-[250]">
+    <div class="ios-card p-10 max-w-lg w-full shadow-2xl">
+        <div class="flex justify-between items-start mb-2">
+            <div>
+                <h3 class="text-2xl font-bold">Nuevo Mapeo</h3>
+                <p id="valueModalSubtitle" class="text-xs text-slate-500 font-bold uppercase tracking-widest"></p>
+            </div>
+            <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100">
+                <input type="checkbox" id="selectAllValues" onchange="toggleSelectAll(this.checked)"
+                    class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer">
+                <label for="selectAllValues"
+                    class="text-[10px] font-black uppercase text-slate-400 cursor-pointer">Todos</label>
+            </div>
+        </div>
+
+        <div class="relative mb-6">
+            <input type="text" id="valueSearch" placeholder="Buscar valor..." onkeyup="filterValueList()"
+                class="w-full bg-slate-50 border-none rounded-xl py-3 pl-10 pr-4 text-sm font-semibold text-slate-600 outline-none focus:ring-2 focus:ring-blue-100 transition-all">
+            <svg class="w-5 h-5 text-slate-300 absolute left-3.5 top-3" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+        </div>
+
+        <div class="max-h-60 overflow-y-auto mb-6 pr-2 custom-scroll space-y-2" id="valueListContainer">
+            <!-- Valores para seleccionar -->
+        </div>
+
+        <!-- Ingreso Manual de Valor -->
+        <div class="p-4 bg-blue-50/50 rounded-2xl border border-blue-100 mb-8">
+            <label class="text-[9px] font-black uppercase text-blue-500 block mb-2">O agregar valor manual:</label>
+            <div class="flex gap-2">
+                <input type="text" id="manualValueInput" placeholder="Escribe un valor nuevo..." 
+                    class="flex-1 bg-white border border-blue-200 rounded-xl px-4 py-2 text-sm font-bold text-blue-600 outline-none focus:ring-2 focus:ring-blue-500/20">
+                <button onclick="addManualValueToSelection()" class="bg-blue-600 text-white rounded-xl px-4 py-2 text-[10px] font-black uppercase hover:bg-blue-500 transition-all">Añadir</button>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-6 border-t border-slate-100">
+            <button onclick="$('#valueModal').addClass('hidden')" class="ios-btn ios-btn-secondary">Cancelar</button>
+            <button onclick="confirmMultiSelect()" id="confirmSelectBtn"
+                class="ios-btn ios-btn-primary px-8 relative overflow-hidden">
+                <span id="confirmBtnText">Confirmar (0)</span>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let filterConfigs = {};
+    let allMapeos = [];
+    let criterioColumns = [];
+    let rawProjects = [];
+
+    async function init() {
+        await loadInitialData();
+        renderTable();
+    }
+
+    async function loadInitialData() {
+        const cRes = await fetch('/api/config/filtros');
+        filterConfigs = await cRes.json();
+
+        const mRes = await fetch('/api/config/mapeos');
+        allMapeos = await mRes.json();
+
+        const pRes = await fetch('/api/proyectos');
+        rawProjects = await pRes.json();
+
+        if (rawProjects.length > 0) {
+            criterioColumns = Object.keys(rawProjects[0]).filter(k => !k.startsWith('__')).sort();
+            const sel = $('#criterioSelector');
+            const currentVal = sel.val();
+            sel.empty().append('<option value="">Selecciona una columna...</option>');
+            criterioColumns.forEach(c => {
+                sel.append(`<option value="${c}" ${c === currentVal ? 'selected' : ''}>${c}</option>`);
+            });
+        }
+    }
+
+    function getActiveVirtualCols() {
+        const activeCriterio = $('#criterioSelector').val();
+        if (!activeCriterio || !filterConfigs[activeCriterio]) return [];
+        return filterConfigs[activeCriterio].virtual_cols || [];
+    }
+
+    function renderTable() {
+        const activeCriterio = $('#criterioSelector').val();
+        const vCols = getActiveVirtualCols();
+
+        const headerContainer = $('#dynamicHeaders').empty();
+        $('#mapeosTable thead th.dynamic-col').remove();
+
+        vCols.forEach(col => {
+            headerContainer.before(`
+                <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-500 border-b border-slate-700 dynamic-col">
+                    <div class="flex items-center justify-between gap-2">
+                        <span>${col}</span>
+                        <button onclick="fillDown('${col}')" title="Copiar primer valor hacia abajo" class="p-1 hover:bg-blue-100 rounded text-blue-400 transition-colors">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+                        </button>
+                    </div>
+                </th>
+            `);
+        });
+
+        const body = $('#mapeosBody').empty();
+
+        if (!activeCriterio) {
+            body.append('<tr><td colspan="100" class="py-20 text-center opacity-30 italic">Selecciona una columna criterio para ver los mapeos</td></tr>');
+            return;
+        }
+
+        const filteredMapeos = allMapeos.filter(m => m.columna_criterio === activeCriterio);
+
+        if (filteredMapeos.length === 0) {
+            body.append('<tr><td colspan="100" class="py-20 text-center opacity-30 italic">No hay mapeos definidos para esta columna</td></tr>');
+        }
+
+        filteredMapeos.forEach((m, rowIndex) => {
+            let rowHtml = `<tr class="hover:bg-blue-500/5 transition-all border-b border-slate-800">
+                <td class="px-6 py-4 font-bold text-slate-300 text-sm">${m.valor_criterio}</td>`;
+
+            vCols.forEach(vc => {
+                const val = m.valores[vc] || "";
+                rowHtml += `<td class="px-6 py-4">
+                    <input type="text" value="${val}" 
+                        data-mapeo-id="${m.id}"
+                        data-col="${vc}"
+                        data-row-index="${rowIndex}"
+                        onchange="saveMappingValue(${m.id}, '${vc}', this.value)"
+                        onpaste="handlePaste(event, ${rowIndex}, '${vc}')"
+                        class="virtual-input w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-200 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
+                </td>`;
+            });
+
+            rowHtml += `<td class="px-6 py-4 text-center">
+                <button onclick="deleteMapeo(${m.id})" class="text-slate-300 hover:text-rose-500 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+            </td></tr>`;
+            body.append(rowHtml);
+        });
+    }
+
+    function handlePaste(e, startRowIndex, colName) {
+        const clipboardData = e.clipboardData || window.clipboardData;
+        const pastedData = clipboardData.getData('Text');
+        const rows = pastedData.split(/\r?\n/).filter(r => r.length > 0);
+
+        if (rows.length > 1) {
+            e.preventDefault();
+            const inputs = $(`.virtual-input[data-col="${colName}"]`);
+            rows.forEach((value, i) => {
+                const targetInput = inputs.filter(`[data-row-index="${startRowIndex + i}"]`);
+                if (targetInput.length) {
+                    targetInput.val(value).trigger('change');
+                }
+            });
+        }
+    }
+
+    async function fillDown(colName) {
+        const inputs = $(`.virtual-input[data-col="${colName}"]`);
+        if (inputs.length === 0) return;
+
+        const firstVal = inputs.first().val();
+        if (!confirm(`¿Copiar el valor "${firstVal}" a todas las filas de la columna "${colName}"?`)) return;
+
+        inputs.val(firstVal).trigger('change');
+    }
+
+    async function loadMapeos() {
+        renderTable();
+    }
+
+    function openConfigModal() {
+        const activeCriterio = $('#criterioSelector').val();
+        if (!activeCriterio) return alert("Selecciona primero una Columna Criterio");
+        renderVirtualColsList();
+        $('#configModal').removeClass('hidden');
+    }
+
+    function renderVirtualColsList() {
+        const vCols = getActiveVirtualCols();
+        const list = $('#virtualColsList').empty();
+        vCols.forEach(col => {
+            list.append(`
+                <div class="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-100 group">
+                    <span class="font-bold text-slate-700 uppercase tracking-tight">${col}</span>
+                    <button onclick="removeVirtualCol('${col}')" class="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            `);
+        });
+    }
+
+    async function addVirtualCol() {
+        const activeCriterio = $('#criterioSelector').val();
+        const name = $('#newVirtualColName').val().trim().toUpperCase();
+        if (!name || !activeCriterio) return;
+        
+        const currentCols = getActiveVirtualCols();
+        if (currentCols.includes(name)) return;
+        
+        const newCols = [...currentCols, name];
+        
+        await fetch('/api/config/filtros', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ columna: activeCriterio, virtual_cols: newCols })
+        });
+        
+        $('#newVirtualColName').val('');
+        await loadInitialData();
+        renderVirtualColsList();
+        renderTable();
+    }
+
+    async function removeVirtualCol(name) {
+        const activeCriterio = $('#criterioSelector').val();
+        if (!activeCriterio) return;
+        if (!confirm(`¿Eliminar la columna virtual "${name}" de este criterio?`)) return;
+        
+        const currentCols = getActiveVirtualCols();
+        const newCols = currentCols.filter(c => c !== name);
+        
+        await fetch('/api/config/filtros', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ columna: activeCriterio, virtual_cols: newCols })
+        });
+        
+        await loadInitialData();
+        renderVirtualColsList();
+        renderTable();
+    }
+
+    let selectedValues = new Set();
+
+    function addNewMapeoRow() {
+        const cc = $('#criterioSelector').val();
+        if (!cc) return alert("Selecciona primero una Columna Criterio");
+
+        const uniqueValues = [...new Set(rawProjects.map(p => p[cc]))]
+            .filter(v => v)
+            .sort();
+
+        const existingValues = allMapeos.filter(m => m.columna_criterio === cc).map(m => String(m.valor_criterio).trim());
+        const availableValues = uniqueValues.filter(v => !existingValues.includes(String(v).trim()));
+
+        $('#valueModalSubtitle').text(`Selecciona o agrega valores de "${cc}"`);
+        const container = $('#valueListContainer').empty();
+        selectedValues.clear();
+        updateConfirmBtn();
+        $('#selectAllValues').prop('checked', false);
+        $('#manualValueInput').val('');
+
+        if (availableValues.length === 0) {
+            container.append('<p class="text-center py-4 text-slate-400 font-bold italic opacity-50">No hay más valores automáticos disponibles</p>');
+        } else {
+            availableValues.forEach(val => {
+                container.append(`
+                    <div id="val-item-${val.replace(/[^a-z0-9]/gi, '_')}" onclick="toggleValueSelection('${val}')" 
+                         class="value-item group flex justify-between items-center p-4 bg-slate-50 hover:bg-blue-50 rounded-2xl cursor-pointer transition-all border border-slate-100 hover:border-blue-200 mb-2">
+                        <span class="font-bold text-slate-700">${val}</span>
+                        <div class="w-6 h-6 rounded-full border-2 border-slate-200 flex items-center justify-center transition-all check-indicator">
+                            <svg class="w-4 h-4 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                    </div>
+                `);
+            });
+        }
+
+        $('#valueSearch').val('');
+        $('#valueModal').removeClass('hidden');
+    }
+
+    function addManualValueToSelection() {
+        const val = $('#manualValueInput').val().trim();
+        if (!val) return;
+        
+        // Agregar a la lista si no está
+        const container = $('#valueListContainer');
+        const safeId = val.replace(/[^a-z0-9]/gi, '_');
+        
+        if ($(`#val-item-${safeId}`).length === 0) {
+            container.prepend(`
+                <div id="val-item-${safeId}" onclick="toggleValueSelection('${val}')" 
+                     class="value-item group flex justify-between items-center p-4 bg-slate-50 hover:bg-blue-50 rounded-2xl cursor-pointer transition-all border border-slate-100 hover:border-blue-200 mb-2">
+                    <span class="font-bold text-slate-700">${val}</span>
+                    <div class="w-6 h-6 rounded-full border-2 border-slate-200 flex items-center justify-center transition-all check-indicator">
+                        <svg class="w-4 h-4 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                </div>
+            `);
+        }
+        
+        toggleValueSelection(val);
+        $('#manualValueInput').val('');
+    }
+
+    function toggleValueSelection(val) {
+        const safeId = val.replace(/[^a-z0-9]/gi, '_');
+        const item = $(`#val-item-${safeId}`);
+        if (selectedValues.has(val)) {
+            selectedValues.delete(val);
+            item.removeClass('bg-blue-600 border-blue-600 text-white').addClass('bg-slate-50 border-slate-100 text-slate-700');
+            item.find('.check-indicator').removeClass('bg-white border-white').addClass('border-slate-200');
+            item.find('svg').addClass('hidden');
+        } else {
+            selectedValues.add(val);
+            item.addClass('bg-blue-600 border-blue-600 text-white').removeClass('bg-slate-50 border-slate-100 text-slate-700');
+            item.find('.check-indicator').addClass('bg-white border-white').removeClass('border-slate-200');
+            item.find('svg').removeClass('hidden').addClass('text-blue-600');
+        }
+        updateConfirmBtn();
+    }
+
+    function toggleSelectAll(checked) {
+        $('.value-item:visible').each(function () {
+            const val = $(this).find('span').text();
+            if (checked && !selectedValues.has(val)) {
+                toggleValueSelection(val);
+            } else if (!checked && selectedValues.has(val)) {
+                toggleValueSelection(val);
+            }
+        });
+    }
+
+    function updateConfirmBtn() {
+        const count = selectedValues.size;
+        $('#confirmBtnText').text(`Confirmar (${count})`);
+        $('#confirmSelectBtn').prop('disabled', count === 0).toggleClass('opacity-50 cursor-not-allowed', count === 0);
+    }
+
+    async function confirmMultiSelect() {
+        const cc = $('#criterioSelector').val();
+        const promises = Array.from(selectedValues).map(val =>
+            fetch('/api/config/mapeos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ columna_criterio: cc, valor_criterio: val, valores: {} })
+            })
+        );
+
+        $('#confirmBtnText').text('Procesando...');
+        await Promise.all(promises);
+
+        $('#valueModal').addClass('hidden');
+        await loadInitialData();
+        renderTable();
+    }
+
+    function filterValueList() {
+        const query = $('#valueSearch').val().toUpperCase();
+        $('.value-item').each(function () {
+            const text = $(this).text().toUpperCase();
+            $(this).toggle(text.indexOf(query) > -1);
+        });
+    }
+
+
+    async function saveMappingValue(id, virtualCol, value) {
+        const m = allMapeos.find(x => x.id === id);
+        if (!m) return;
+
+        const newValores = { ...m.valores };
+        newValores[virtualCol] = value;
+
+        await fetch('/api/config/mapeos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                columna_criterio: m.columna_criterio,
+                valor_criterio: m.valor_criterio,
+                valores: newValores
+            })
+        });
+        
+        // Actualizar localmente para no recargar todo
+        m.valores = newValores;
+    }
+
+    async function deleteMapeo(id) {
+        if (!confirm("¿Eliminar este mapeo?")) return;
+        await fetch(`/api/config/mapeos/${id}`, { method: 'DELETE' });
+        await loadInitialData();
+        renderTable();
+    }
+
+    $(document).ready(() => init());
+</script>
+{% endblock %}

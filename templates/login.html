@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANTON — Iniciar Sesión</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .bg-grid {
+            background-image:
+                linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .glow-blue {
+            box-shadow: 0 0 80px rgba(59, 130, 246, 0.15), 0 0 40px rgba(59, 130, 246, 0.08);
+        }
+
+        .logo-pulse {
+            animation: logoPulse 3s ease-in-out infinite;
+        }
+        @keyframes logoPulse {
+            0%, 100% { box-shadow: 0 0 25px rgba(59,130,246,0.4), 0 0 50px rgba(59,130,246,0.15); }
+            50%       { box-shadow: 0 0 40px rgba(59,130,246,0.7), 0 0 80px rgba(59,130,246,0.3); }
+        }
+
+        .input-field {
+            width: 100%;
+            background: rgba(30,41,59,0.8);
+            border: 1px solid #334155;
+            border-radius: 14px;
+            padding: 14px 18px;
+            color: #f8fafc;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+        .input-field:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+            background: rgba(30,41,59,1);
+        }
+        .input-field::placeholder { color: #475569; }
+
+        .btn-login {
+            width: 100%;
+            background: #2563eb;
+            color: white;
+            font-weight: 800;
+            font-size: 15px;
+            padding: 14px;
+            border-radius: 14px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 25px rgba(37,99,235,0.4);
+            letter-spacing: 0.01em;
+        }
+        .btn-login:hover  { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 8px 30px rgba(37,99,235,0.5); }
+        .btn-login:active { transform: scale(0.98); }
+        .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        .shake { animation: shake 0.4s ease; }
+        @keyframes shake {
+            0%,100% { transform: translateX(0); }
+            20%      { transform: translateX(-8px); }
+            40%      { transform: translateX(8px); }
+            60%      { transform: translateX(-5px); }
+            80%      { transform: translateX(5px); }
+        }
+
+        .fade-in { animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+    </style>
+</head>
+<body class="min-h-screen bg-grid flex items-center justify-center p-4">
+
+    <!-- Background blobs -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/8 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-indigo-600/8 rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="relative w-full max-w-sm fade-in">
+
+        <!-- Card -->
+        <div class="bg-slate-900/90 border border-slate-700/60 rounded-3xl p-8 glow-blue backdrop-blur-sm">
+
+            <!-- Logo + Brand -->
+            <div class="flex flex-col items-center mb-8">
+                <div class="w-16 h-16 bg-blue-600 rounded-2xl shadow-2xl flex items-center justify-center text-white font-black text-3xl italic tracking-tighter logo-pulse mb-4">
+                    A
+                </div>
+                <h1 class="text-2xl font-black text-white tracking-tight">ANTON</h1>
+                <p class="text-slate-500 text-xs font-semibold mt-1 uppercase tracking-widest">Sistema de Gestión</p>
+            </div>
+
+            <!-- Error message -->
+            <div id="errorMsg" class="hidden mb-5 p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-sm font-semibold text-center">
+                <span id="errorText">Error de autenticación</span>
+            </div>
+
+            <!-- Form -->
+            <form id="loginForm" onsubmit="doLogin(event)" class="space-y-4">
+
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Usuario</label>
+                    <input type="text" id="loginUsuario" class="input-field" placeholder="Ingresa tu usuario" autocomplete="username" required>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Contraseña</label>
+                    <div class="relative">
+                        <input type="password" id="loginPassword" class="input-field" placeholder="••••••••" autocomplete="current-password" style="padding-right: 48px;" required>
+                        <button type="button" onclick="togglePass()" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
+                            <svg id="eyeOpen" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                            <svg id="eyeClosed" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" id="btnLogin" class="btn-login">
+                        <span id="btnText">Iniciar Sesión</span>
+                        <svg id="btnSpinner" class="hidden w-5 h-5 mx-auto spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Footer -->
+            <p class="text-center text-slate-700 text-[10px] font-semibold mt-8 uppercase tracking-widest">COBRA PERU S.A. &copy; 2025</p>
+        </div>
+    </div>
+
+    <script>
+        function togglePass() {
+            const inp = document.getElementById('loginPassword');
+            const open = document.getElementById('eyeOpen');
+            const closed = document.getElementById('eyeClosed');
+            if (inp.type === 'password') {
+                inp.type = 'text';
+                open.classList.add('hidden');
+                closed.classList.remove('hidden');
+            } else {
+                inp.type = 'password';
+                open.classList.remove('hidden');
+                closed.classList.add('hidden');
+            }
+        }
+
+        function showError(msg) {
+            const box = document.getElementById('errorMsg');
+            document.getElementById('errorText').textContent = msg;
+            box.classList.remove('hidden');
+            document.getElementById('loginForm').classList.add('shake');
+            setTimeout(() => document.getElementById('loginForm').classList.remove('shake'), 400);
+        }
+
+        async function doLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnLogin');
+            const btnText = document.getElementById('btnText');
+            const spinner = document.getElementById('btnSpinner');
+            const errorBox = document.getElementById('errorMsg');
+
+            // Reset
+            errorBox.classList.add('hidden');
+            btn.disabled = true;
+            btnText.classList.add('hidden');
+            spinner.classList.remove('hidden');
+
+            const usuario = document.getElementById('loginUsuario').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuario, password })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    // Redirigir suavemente
+                    window.location.href = data.redirect || '/';
+                } else {
+                    showError(data.message || 'Error de autenticación');
+                }
+            } catch (err) {
+                showError('No se pudo conectar con el servidor.');
+            } finally {
+                btn.disabled = false;
+                btnText.classList.remove('hidden');
+                spinner.classList.add('hidden');
+            }
+        }
+
+        // Focus automático
+        document.getElementById('loginUsuario').focus();
+    </script>
+</body>
+</html>

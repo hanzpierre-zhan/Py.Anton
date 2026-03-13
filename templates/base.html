@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANTON - {% block title %}{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/colreorder/1.7.0/css/colReorder.dataTables.min.css">
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/colreorder/1.7.0/js/dataTables.colReorder.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --ios-bg: #0f172a; /* Slate 900 */
+            --ios-card: #1e293b; /* Slate 800 */
+            --ios-accent: #3b82f6; /* Blue 500 */
+            --ios-text: #f8fafc; /* Slate 50 */
+            --ios-secondary: #94a3b8; /* Slate 400 */
+            --ios-border: #334155; /* Slate 700 */
+            --ios-input-bg: #1e293b;
+            --ios-input-border: #334155;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--ios-bg);
+            color: var(--ios-text);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+        }
+
+        .glass {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .ios-card {
+            background: var(--ios-card);
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--ios-border);
+            transition: transform 0.2s ease;
+        }
+
+        .ios-btn {
+            padding: 0.625rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            transition-property: all;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 200ms;
+        }
+        .ios-btn:active {
+            transform: scale(0.95);
+        }
+
+        .ios-btn-primary {
+            background-color: var(--ios-accent);
+            color: white;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .logo-glow {
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .ios-nav-link.active {
+            background: var(--ios-accent);
+            color: white;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .ios-btn-secondary {
+            background-color: #334155;
+            color: #f8fafc;
+            border: 1px solid #475569;
+        }
+
+        .nav-link {
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition-property: all;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 150ms;
+        }
+
+        .nav-link.active {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--ios-accent);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        /* DataTables Dark adjustments */
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter,
+        .dataTables_wrapper .dataTables_info,
+        .dataTables_wrapper .dataTables_processing,
+        .dataTables_wrapper .dataTables_paginate {
+            color: var(--ios-secondary) !important;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            border-radius: 0.75rem !important;
+            border-style: none !important;
+            transition-property: all !important;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+            transition-duration: 150ms !important;
+            background: #1e293b !important;
+            color: #94a3b8 !important;
+            padding: 4px 12px !important;
+            border: 1px solid #334155 !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: var(--ios-accent) !important;
+            color: white !important;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+            border: none !important;
+        }
+        
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: #334155 !important;
+            color: white !important;
+        }
+
+        table.dataTable {
+            border-bottom: none !important;
+        }
+
+        table.dataTable thead th {
+            background-color: #1e293b !important;
+            color: #94a3b8 !important;
+            font-weight: 700 !important;
+            font-size: 10px !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em !important;
+            padding: 12px !important;
+            border-bottom: 1px solid #334155 !important;
+        }
+
+        table.dataTable tbody td {
+            padding: 8px 12px !important;
+            border-bottom: 1px solid #1e293b !important;
+            color: #cbd5e1 !important;
+            font-weight: 500 !important;
+        }
+
+        table.dataTable.no-footer {
+            border-bottom: none !important;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.025em;
+        }
+
+        /* ColReorder Helper */
+        th.dt-colreorder-moving {
+            outline: 2px solid var(--ios-accent) !important;
+            background: rgba(37, 99, 235, 0.1) !important;
+        }
+
+        table.dataTable thead th {
+            cursor: default !important;
+        }
+
+        /* Scrollbar Superior Estilo Píldora Negra */
+        #topScrollContainer::-webkit-scrollbar {
+            height: 10px;
+        }
+
+        #topScrollContainer::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 20px;
+            margin: 0 10px;
+        }
+
+        #topScrollContainer::-webkit-scrollbar-thumb {
+            background: #1e293b; /* Casi negro */
+            border-radius: 20px;
+            border: 2px solid #f1f5f9;
+        }
+ 
+        #topScrollContainer::-webkit-scrollbar-thumb:hover {
+            background: #000000;
+        }
+ 
+        /* Global Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+ 
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+ 
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 10px;
+            border: 2px solid #0f172a;
+        }
+ 
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col">
+
+    <!-- Top Nav (iOS Navigation Bar style) -->
+    <nav
+        class="sticky top-0 z-[100] bg-slate-900/80 backdrop-blur-md border-b border-slate-800 px-12 py-3 flex items-center justify-between shadow-lg">
+        <div class="flex items-center gap-2">
+            <div
+                class="w-9 h-9 bg-blue-600 rounded-xl shadow-lg shadow-blue-900/40 flex items-center justify-center text-white font-black text-xl italic tracking-tighter">
+                A</div>
+            <h1 class="text-xl font-black tracking-tight text-white">ANTON</h1>
+        </div>
+
+        <!-- Navigation Links -->
+        <div class="flex items-center gap-8 text-slate-400">
+            {% set active_class = "flex items-center gap-2 px-6 py-2.5 rounded-full font-bold text-sm bg-blue-600
+            text-white shadow-xl shadow-blue-900/40 transition-all scale-105" %}
+            {% set inactive_class = "flex items-center gap-2 font-bold text-sm hover:text-slate-600 transition-all" %}
+
+            <a href="/dashboard"
+                class="{% if request.path == '/dashboard' %}{{ active_class }}{% else %}{{ inactive_class }}{% endif %}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                        d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
+                    </path>
+                </svg>
+                Dashboard
+            </a>
+
+            <a href="/" class="{% if request.path == '/' %}{{ active_class }}{% else %}{{ inactive_class }}{% endif %}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16">
+                    </path>
+                </svg>
+                Proyectos
+            </a>
+
+            {% if current_user and current_user.rol in ['Admin', 'Administrador'] %}
+            <a href="/importar"
+                class="{% if request.path == '/importar' %}{{ active_class }}{% else %}{{ inactive_class }}{% endif %}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                        d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                    </path>
+                </svg>
+                Importar
+            </a>
+
+            <a href="/tablas"
+                class="{% if request.path == '/tablas' %}{{ active_class }}{% else %}{{ inactive_class }}{% endif %}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                    </path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                Tablas
+            </a>
+
+            <a href="/filtros"
+                class="{% if request.path == '/filtros' %}{{ active_class }}{% else %}{{ inactive_class }}{% endif %}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                        d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
+                    </path>
+                </svg>
+                Filtros
+            </a>
+            {% endif %}
+
+            {% if current_user and current_user.rol == 'Administrador' %}
+            <a href="/usuarios"
+                class="{% if request.path == '/usuarios' %}{{ active_class }}{% else %}{{ inactive_class }}{% endif %}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                    </path>
+                </svg>
+                Usuarios
+            </a>
+            {% endif %}
+        </div>
+
+        <!-- Usuario en sesión + Logout -->
+        <div class="flex items-center gap-3">
+            {% if current_user %}
+            <div class="text-right">
+                <p class="text-[10px] uppercase font-bold text-slate-500">{{ current_user.rol }}</p>
+                <p class="text-xs font-semibold text-slate-200">{{ current_user.nombres.split()[0] if current_user.nombres else current_user.usuario }}</p>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 border-2 border-slate-700 shadow-md flex items-center justify-center text-white font-black text-sm">
+                {{ (current_user.nombres[0] if current_user.nombres else current_user.usuario[0]) | upper }}
+            </div>
+            <a href="/logout" title="Cerrar Sesión"
+               onclick="return confirm('¿Cerrar sesión?')"
+               class="ml-1 flex items-center gap-1.5 px-3 py-2 rounded-xl text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all text-xs font-bold border border-transparent hover:border-rose-500/20">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+                Salir
+            </a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <main class="flex-1 overflow-x-hidden">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script>
+        window.userRole = "{{ current_user.rol if current_user else '' }}";
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

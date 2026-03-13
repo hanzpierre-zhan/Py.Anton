@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+{% block title %}Usuarios{% endblock %}
+
+{% block content %}
+<div class="p-8 max-w-7xl mx-auto">
+    <div class="flex justify-between items-end mb-8">
+        <div>
+            <h2 class="text-3xl font-black text-white tracking-tight">Gestión de Usuarios</h2>
+            <p class="text-slate-400 text-sm mt-1">Administra los accesos, roles y restricciones de datos.</p>
+        </div>
+        <button onclick="openUserModal()"
+            class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-3 shadow-lg shadow-blue-500/20 transition-all hover:-translate-y-0.5">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Nuevo Usuario
+        </button>
+    </div>
+
+    <!-- Tabla de Usuarios -->
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-xl">
+        <table class="w-full text-left border-collapse">
+            <thead class="bg-slate-800/50">
+                <tr>
+                    <th class="p-4 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-700">Usuario / Login</th>
+                    <th class="p-4 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-700">Nombres Completos</th>
+                    <th class="p-4 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-700">Rol</th>
+                    <th class="p-4 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-700">Contraseña</th>
+                    <th class="p-4 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-700">Estado</th>
+                    <th class="p-4 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-700 text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="usersTableBody" class="divide-y divide-slate-800">
+                <tr>
+                    <td colspan="6" class="p-8 text-center text-slate-500">
+                        <div class="flex flex-col items-center gap-3">
+                            <div class="w-8 h-8 rounded-full border-2 border-slate-600 border-t-blue-500 animate-spin"></div>
+                            <span class="text-xs font-bold uppercase tracking-widest">Cargando usuarios...</span>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ===== Modal Creación/Edición de Usuario ===== -->
+<div id="userModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
+        <div class="p-6 border-b border-slate-800 flex justify-between items-center">
+            <h3 id="modalTitle" class="text-xl font-black text-white">Nuevo Usuario</h3>
+            <button onclick="closeUserModal()" class="text-slate-500 hover:text-white transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        
+        <form id="userForm" class="p-6 space-y-4" onsubmit="saveUser(event)">
+            <input type="hidden" id="userId">
+            
+            <div>
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Usuario (Login)</label>
+                <input type="text" id="userLogin" required
+                    class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-slate-600"
+                    placeholder="ej: jperez">
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nombres Completos</label>
+                <input type="text" id="userNames" required
+                    class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-slate-600"
+                    placeholder="ej: Juan Pérez García">
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Contraseña</label>
+                <div class="relative">
+                    <input type="password" id="userPassword"
+                        class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 pr-12 text-white text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-slate-600"
+                        placeholder="Dejar en blanco para no cambiar">
+                    <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
+                        <svg id="eyeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Rol</label>
+                <select id="userRole" required
+                    class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-blue-500 transition-all">
+                    <option value="Administrador">Administrador</option>
+                    <option value="Editor">Editor</option>
+                    <option value="Visualizador">Visualizador</option>
+                </select>
+            </div>
+
+            <div class="flex items-center gap-3 pt-1">
+                <input type="checkbox" id="userActive" checked
+                    class="w-5 h-5 rounded bg-slate-800 border-slate-600 text-blue-500 cursor-pointer">
+                <label for="userActive" class="text-sm font-bold text-slate-300 cursor-pointer">Usuario Activo</label>
+            </div>
+
+            <div class="pt-4 flex justify-end gap-3 border-t border-slate-800">
+                <button type="button" onclick="closeUserModal()"
+                    class="px-6 py-2.5 rounded-xl font-bold text-slate-400 hover:bg-slate-800 transition-colors text-sm">Cancelar</button>
+                <button type="submit"
+                    class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20 text-sm">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== Modal Restricciones de Datos ===== -->
+<div id="restriccionesModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
+        <div class="p-6 border-b border-slate-800 flex justify-between items-center flex-shrink-0">
+            <div>
+                <h3 class="text-xl font-black text-white">Restricciones de Datos</h3>
+                <p id="restriccionesSubtitle" class="text-slate-400 text-sm mt-0.5"></p>
+            </div>
+            <button onclick="closeRestriccionesModal()" class="text-slate-500 hover:text-white transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+
+        <!-- Lista de restricciones activas -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-3">
+            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Restricciones activas</p>
+            <div id="restriccionesList" class="space-y-2 min-h-[60px]">
+                <p class="text-slate-600 text-sm italic">Sin restricciones — el usuario ve todos los datos.</p>
+            </div>
+        </div>
+
+        <!-- Agregar nueva restricción -->
+        <div class="p-6 border-t border-slate-800 space-y-4 flex-shrink-0">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Añadir restricción</p>
+            <div class="flex gap-3">
+                <div class="flex-1">
+                    <input type="text" id="restriccionColumna" placeholder="Columna (ej: JEFATURA, REGION)"
+                        class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500 placeholder:text-slate-600">
+                </div>
+                <div class="flex-1">
+                    <input type="text" id="restriccionValores" placeholder="Valores separados por comas"
+                        class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500 placeholder:text-slate-600">
+                </div>
+                <button onclick="addRestriccion()"
+                    class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl font-bold transition-all text-sm flex-shrink-0">
+                    + Agregar
+                </button>
+            </div>
+            <p class="text-[10px] text-slate-500">Ejemplo: Columna = <span class="text-slate-300 font-mono">JEFATURA</span>&nbsp;&nbsp;Valores = <span class="text-slate-300 font-mono">LIMA, NORTE</span></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const API_URL = '/api/usuarios';
+    let currentRestriccionUserId = null;
+
+    // ---- Usuarios ----
+
+    async function loadUsers() {
+        try {
+            const res = await fetch(API_URL);
+            const users = await res.json();
+            const tbody = document.getElementById('usersTableBody');
+            
+            if (users.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-500 font-medium">No hay usuarios registrados. Crea el primero.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = users.map(u => `
+                <tr class="hover:bg-slate-800/50 transition-colors group">
+                    <td class="p-4 border-b border-slate-800">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-black text-white text-xs flex-shrink-0">${u.usuario.substring(0,2).toUpperCase()}</div>
+                            <span class="font-bold text-white font-mono text-sm">${u.usuario}</span>
+                        </div>
+                    </td>
+                    <td class="p-4 border-b border-slate-800 text-slate-300 text-sm">${u.nombres}</td>
+                    <td class="p-4 border-b border-slate-800">
+                        <span class="px-3 py-1 bg-slate-800 text-slate-300 text-[10px] font-black uppercase tracking-widest rounded-lg border border-slate-700">${u.rol}</span>
+                    </td>
+                    <td class="p-4 border-b border-slate-800">
+                        <span class="text-slate-600 text-xs font-mono">${u.tiene_password ? '●●●●●●' : 'Sin contraseña'}</span>
+                    </td>
+                    <td class="p-4 border-b border-slate-800">
+                        <span class="flex items-center gap-2 text-xs font-bold ${u.activo ? 'text-emerald-400' : 'text-rose-400'}">
+                            <span class="w-1.5 h-1.5 rounded-full ${u.activo ? 'bg-emerald-400' : 'bg-rose-400'}"></span>
+                            ${u.activo ? 'ACTIVO' : 'INACTIVO'}
+                        </span>
+                    </td>
+                    <td class="p-4 border-b border-slate-800 text-right">
+                        <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick='openRestriccionesModal(${u.id}, "${u.nombres}")' class="p-2 text-slate-400 hover:text-amber-400 transition-colors" title="Restricciones de Datos">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                            </button>
+                            <button onclick='editUser(${JSON.stringify(u)})' class="p-2 text-slate-400 hover:text-blue-400 transition-colors" title="Editar">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            </button>
+                            <button onclick="deleteUser(${u.id}, '${u.usuario}')" class="p-2 text-slate-400 hover:text-rose-400 transition-colors" title="Eliminar">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    function openUserModal() {
+        document.getElementById('userForm').reset();
+        document.getElementById('userId').value = '';
+        document.getElementById('userLogin').disabled = false;
+        document.getElementById('userPassword').placeholder = 'Contraseña obligatoria al crear';
+        document.getElementById('modalTitle').textContent = 'Nuevo Usuario';
+        document.getElementById('userModal').classList.remove('hidden');
+    }
+
+    function closeUserModal() { document.getElementById('userModal').classList.add('hidden'); }
+
+    function editUser(user) {
+        document.getElementById('userId').value = user.id;
+        document.getElementById('userLogin').value = user.usuario;
+        document.getElementById('userLogin').disabled = true;
+        document.getElementById('userNames').value = user.nombres;
+        document.getElementById('userRole').value = user.rol;
+        document.getElementById('userActive').checked = user.activo;
+        document.getElementById('userPassword').value = '';
+        document.getElementById('userPassword').placeholder = 'Dejar en blanco para no cambiar';
+        document.getElementById('modalTitle').textContent = 'Editar Usuario';
+        document.getElementById('userModal').classList.remove('hidden');
+    }
+
+    function togglePasswordVisibility() {
+        const input = document.getElementById('userPassword');
+        input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    async function saveUser(e) {
+        e.preventDefault();
+        const id = document.getElementById('userId').value;
+        const payload = {
+            usuario: document.getElementById('userLogin').value,
+            nombres: document.getElementById('userNames').value,
+            rol: document.getElementById('userRole').value,
+            activo: document.getElementById('userActive').checked,
+            password: document.getElementById('userPassword').value || null
+        };
+
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `${API_URL}/${id}` : API_URL;
+
+        try {
+            const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const data = await res.json();
+            if (data.success) { closeUserModal(); loadUsers(); }
+            else alert(data.message || 'Error al guardar');
+        } catch(err) { alert('Error de conexión'); }
+    }
+
+    async function deleteUser(id, username) {
+        if (!confirm(`¿Eliminar permanentemente al usuario "${username}"?`)) return;
+        const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) loadUsers();
+        else alert(data.message);
+    }
+
+    // ---- Restricciones de Datos ----
+
+    async function openRestriccionesModal(userId, nombre) {
+        currentRestriccionUserId = userId;
+        document.getElementById('restriccionesSubtitle').textContent = `Usuario: ${nombre}`;
+        document.getElementById('restriccionColumna').value = '';
+        document.getElementById('restriccionValores').value = '';
+        document.getElementById('restriccionesModal').classList.remove('hidden');
+        await loadRestricciones();
+    }
+
+    function closeRestriccionesModal() {
+        document.getElementById('restriccionesModal').classList.add('hidden');
+        currentRestriccionUserId = null;
+    }
+
+    async function loadRestricciones() {
+        const res = await fetch(`${API_URL}/${currentRestriccionUserId}/restricciones`);
+        const data = await res.json();
+        const list = document.getElementById('restriccionesList');
+
+        if (data.length === 0) {
+            list.innerHTML = `<p class="text-slate-600 text-sm italic py-2">Sin restricciones — el usuario ve todos los datos.</p>`;
+            return;
+        }
+
+        list.innerHTML = data.map(r => `
+            <div class="flex items-start justify-between p-3 bg-slate-800/70 border border-slate-700 rounded-xl gap-3">
+                <div class="flex-1 min-w-0">
+                    <p class="text-[10px] font-black text-amber-400 uppercase tracking-widest mb-1">${r.columna}</p>
+                    <div class="flex flex-wrap gap-1.5">
+                        ${r.valores.map(v => `<span class="px-2 py-0.5 bg-slate-700 text-slate-300 text-[10px] rounded-md font-bold">${v}</span>`).join('')}
+                    </div>
+                </div>
+                <button onclick="deleteRestriccion(${r.id})" class="text-slate-600 hover:text-rose-400 transition-colors flex-shrink-0 mt-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+        `).join('');
+    }
+
+    async function addRestriccion() {
+        const columna = document.getElementById('restriccionColumna').value.trim().toUpperCase();
+        const valoresRaw = document.getElementById('restriccionValores').value;
+        const valores = valoresRaw.split(',').map(v => v.trim()).filter(v => v);
+
+        if (!columna || valores.length === 0) {
+            alert('Por favor ingresa una columna y al menos un valor.');
+            return;
+        }
+
+        const res = await fetch(`${API_URL}/${currentRestriccionUserId}/restricciones`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ columna, valores })
+        });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('restriccionColumna').value = '';
+            document.getElementById('restriccionValores').value = '';
+            await loadRestricciones();
+        } else alert(data.message);
+    }
+
+    async function deleteRestriccion(rid) {
+        const res = await fetch(`${API_URL}/restricciones/${rid}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) await loadRestricciones();
+    }
+
+    document.addEventListener('DOMContentLoaded', loadUsers);
+</script>
+{% endblock %}
