@@ -6,6 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import io
+from sqlalchemy import text
 
 # Configuración de rutas
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -390,6 +391,7 @@ def delete_entidad():
 # --- API: IMPORTAR ---
 
 @app.route('/api/import', methods=['POST'])
+@admin_required
 def process_import():
     try:
         file = request.files.get('file')
@@ -400,17 +402,15 @@ def process_import():
         if not file: return jsonify({"error": "No hay archivo"}), 400
         
         filename = file.filename
-        print(f"DEBUG: Iniciando importación: {filename}, tipo: {source_type}, filter_active: {filter_active}")
+        print(f"DEBUG: Iniciando importación: {filename}, tipo: {source_type}")
         
-        # Leemos el archivo en memoria de forma segura
-        file_bytes = io.BytesIO(file.read())
-        
+        # Leemos el archivo directamente desde el stream de Flask para ahorrar RAM
         if filename.lower().endswith('.csv'):
-            df = pd.read_csv(file_bytes)
+            df = pd.read_csv(file)
         else:
-            df = pd.read_excel(file_bytes, engine='openpyxl')
+            df = pd.read_excel(file, engine='openpyxl')
         
-        print(f"DEBUG: Archivo leído. Filas: {len(df)}. Columnas: {list(df.columns)}")
+        print(f"DEBUG: DataFrame cargado. Filas: {len(df)}")
         
         # Limpieza y Normalización
         df.columns = [str(c).upper().strip() for c in df.columns]
@@ -431,20 +431,22 @@ def process_import():
         updated = 0
         discarded = 0
 
-        # Optimización: Obtener registros actuales
-        cache_obras = {} 
-        obras_actuales = GestionObra.query.all()
-        for idx, o in enumerate(obras_actuales):
+        # Optimización: Obtener registros actuales de forma eficiente (solo ID y ITEMPLAN)
+        cache_obras_id = {} 
+        # Usamos una query directa para evitar cargar miles de objetos en memoria
+        res = db.session.execute(text("SELECT id, data_json FROM gestion_obras")).all()
+        
+        for oid, d_json in res:
             try:
-                data = json.loads(o.data_json)
-                itp = data.get('ITEMPLAN')
+                # Extraemos el ITEMPLAN de forma cruda para no estresar la RAM
+                # Buscamos el patrón "ITEMPLAN": "..." en el string si es posible, o json.loads
+                d = json.loads(d_json)
+                itp = d.get('ITEMPLAN')
                 if itp:
-                    cache_obras[itp] = o
+                    cache_obras_id[itp] = oid
             except: continue
-            if idx % 500 == 0 and idx > 0:
-                print(f"Cache: {idx} registros procesados...")
-
-        print(f"Cache listo. Cruzando datos...")
+            
+        print(f"DEBUG: Cache listo con {len(cache_obras_id)} registros.")
 
         # Obtener filtros de forma eficiente
         filtros_dict = {}
@@ -466,8 +468,10 @@ def process_import():
                 return ', '.join(sorted(list(set(parts))))
 
             for itp, group in df.groupby('ITEMPLAN'):
-                if itp in cache_obras:
-                    obra_db = cache_obras[itp]
+                if itp in cache_obras_id:
+                    oid = cache_obras_id[itp]
+                    obra_db = db.session.get(GestionObra, oid)
+                    if not obra_db: continue
                     data_actual = json.loads(obra_db.data_json)
 
                     mask_mo = pd.Series([False] * len(group), index=group.index)
@@ -524,8 +528,10 @@ def process_import():
             
             itemplan_nuevo = fila_dict.get('ITEMPLAN')
             
-            if itemplan_nuevo in cache_obras:
-                obra_db = cache_obras[itemplan_nuevo]
+            if itemplan_nuevo in cache_obras_id:
+                oid = cache_obras_id[itemplan_nuevo]
+                obra_db = db.session.get(GestionObra, oid)
+                if not obra_db: continue
                 data_actual = json.loads(obra_db.data_json)
                 
                 if source_type == 'manual_update':
