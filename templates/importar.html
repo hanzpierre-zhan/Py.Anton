@@ -259,9 +259,14 @@
             });
 
             if (!res.ok) {
-                const errorData = await res.json().catch(() => ({}));
-                const msg = errorData.error || `Error del servidor: ${res.status}`;
-                throw new Error(msg);
+                const text = await res.text();
+                console.error("Error del servidor:", text);
+                try {
+                    const errorData = JSON.parse(text);
+                    throw new Error(errorData.error || `Error ${res.status}: ${text}`);
+                } catch (e) {
+                    throw new Error(`Error ${res.status} (No JSON): ${text.substring(0, 200)}`);
+                }
             }
 
             const data = await res.json();

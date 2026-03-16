@@ -106,17 +106,29 @@ def admin_required(f):
         user_rol = session.get('user_rol')
         user_id = session.get('user_id')
         
-        # Si no hay rol en sesión, lo buscamos en la DB (para sesiones antiguas)
         if not user_rol and user_id:
             u = db.session.get(Usuario, user_id)
             if u:
                 user_rol = u.rol
                 session['user_rol'] = user_rol
         
-        if user_rol not in ['Admin', 'Administrador']:
+        if user_rol != 'Admin':
             return redirect(url_for('route_proyectos'))
         return f(*args, **kwargs)
     return decorated
+
+@app.errorhandler(500)
+def handle_500(e):
+    import traceback
+    return jsonify({
+        "error": "Error interno del servidor (Global)",
+        "message": str(e),
+        "trace": traceback.format_exc()
+    }), 500
+
+@app.route('/ping')
+def ping():
+    return "pong", 200
 
 @app.context_processor
 def inject_current_user():
