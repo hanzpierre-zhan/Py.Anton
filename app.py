@@ -112,7 +112,7 @@ def admin_required(f):
                 user_rol = u.rol
                 session['user_rol'] = user_rol
         
-        if user_rol != 'Admin':
+        if not user_rol or user_rol.upper() not in ['ADMIN', 'ADMINISTRADOR']:
             return redirect(url_for('route_proyectos'))
         return f(*args, **kwargs)
     return decorated

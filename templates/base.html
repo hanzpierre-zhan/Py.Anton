@@ -295,7 +295,7 @@
             </a>
             {% endif %}
 
-            {% if current_user and current_user.rol == 'Administrador' %}
+            {% if current_user and current_user.rol in ['Admin', 'Administrador'] %}
             <a href="/usuarios"
                 class="{% if request.path == '/usuarios' %}{{ active_class }}{% else %}{{ inactive_class }}{% endif %}">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
