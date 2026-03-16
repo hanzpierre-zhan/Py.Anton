@@ -7,14 +7,16 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import io
 
-# Configuración de rutas absolutas
+# Configuración de rutas
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
 
 app = Flask(__name__, template_folder=TEMPLATE_DIR)
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(BASE_DIR, "anton.db")}'
+# Aseguramos ruta absoluta para SQLite en Render
+db_path = os.path.join(BASE_DIR, "anton.db")
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'anton_minimal_secret_key'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'anton_production_secret_key_2025')
 db = SQLAlchemy(app)
 
 # --- MODELOS DE DATOS ---
@@ -76,9 +78,12 @@ class RestriccionUsuario(db.Model):
     valores_json = db.Column(db.Text, nullable=False)    # Ej: '["LIMA", "NORTE"]'
 
 # --- INICIALIZACIÓN ---
-
-with app.app_context():
-    db.create_all()
+try:
+    with app.app_context():
+        db.create_all()
+        print("Base de datos inicializada correctamente.")
+except Exception as e:
+    print(f"Error al inicializar la base de datos: {e}")
 
 # --- HELPERS DE SESIÓN ---
 
