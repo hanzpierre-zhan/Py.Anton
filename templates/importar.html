@@ -258,7 +258,11 @@
                 body: formData
             });
 
-            if (!res.ok) throw new Error(`Error del servidor: ${res.status}`);
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                const msg = errorData.error || `Error del servidor: ${res.status}`;
+                throw new Error(msg);
+            }
 
             const data = await res.json();
             console.log("Respuesta recibida:", data);

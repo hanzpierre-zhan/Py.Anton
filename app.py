@@ -364,183 +364,176 @@ def delete_entidad():
 
 @app.route('/api/import', methods=['POST'])
 def process_import():
-    file = request.files.get('file')
-    source_type = request.form.get('source_type', 'planobraCSV')
-    filter_active = request.form.get('filter_active') == 'true'
-    entidad_filtro = request.form.get('entidad_filtro', 'ESTADO PLAN').strip()
-    
-    if not file: return jsonify({"error": "No hay archivo"}), 400
-    
-    filename = file.filename
-    if filename.endswith('.csv'):
-        df = pd.read_csv(file)
-    else:
-        df = pd.read_excel(file)
-    
-    # Limpieza y Normalización
-    df.columns = [str(c).upper().strip() for c in df.columns]
-    df = df.fillna("")
-    
-    # Normalizar ITEMPLAN (quitar .0 de Excel y limpiar espacios)
-    if 'ITEMPLAN' in df.columns:
-        df['ITEMPLAN'] = df['ITEMPLAN'].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
-
-    for col in df.columns:
-        if col != 'ITEMPLAN':
-            df[col] = df[col].astype(str).str.strip()
-
-    total_rows = len(df)
-    imported = 0
-    updated = 0
-    discarded = 0
-
-    # Obtener todos los registros actuales para comparación rápida (por ITEMPLAN)
-    # Nota: Como los datos están en JSON, necesitamos procesar un poco
-    obras_actuales = GestionObra.query.all()
-    cache_obras = {} # { 'ITEMPLAN': objeto_db }
-    for o in obras_actuales:
-        data = json.loads(o.data_json)
-        itp = data.get('ITEMPLAN')
-        if itp:
-            cache_obras[itp] = o
-
-    # Obtener todos los criterios de filtrado si el filtrado está activo
-    filtros_dict = {} # { 'ENTIDAD': ['valor1', 'valor2'] }
-    if filter_active:
-        todos_los_filtros = FiltroMaestro.query.all()
-        for f in todos_los_filtros:
-            entidad = f.entidad.strip()
-            if entidad not in filtros_dict:
-                filtros_dict[entidad] = []
-            filtros_dict[entidad].append(f.valor.strip())
-
-    # Pre-cargar nombres de columnas manuales para source_type == 'manual_update'
-    manual_cols_names = [c.nombre.upper().strip() for c in ColumnaManual.query.all()]
-
-    # --- Lógica específica para Detalle Plan (Agregación MO y MAT) ---
-    if source_type == 'detalleplanCSV':
-        df['VALORIZ MANO DE OBRA'] = pd.to_numeric(df['VALORIZ MANO DE OBRA'], errors='coerce').fillna(0)
+    try:
+        file = request.files.get('file')
+        source_type = request.form.get('source_type', 'planobraCSV')
+        filter_active = request.form.get('filter_active') == 'true'
+        entidad_filtro = request.form.get('entidad_filtro', 'ESTADO PLAN').strip()
         
-        def join_unique(series):
-            parts = [str(v).strip() for v in series.unique() if v and str(v).strip().lower() not in ["", "nan", "none", "0", "0.0"]]
-            return ', '.join(sorted(list(set(parts))))
+        if not file: return jsonify({"error": "No hay archivo"}), 400
+        
+        filename = file.filename
+        print(f"Iniciando importación: {filename}, tipo: {source_type}")
+        
+        if filename.endswith('.csv'):
+            df = pd.read_csv(file)
+        else:
+            # Forzamos engine openpyxl para evitar inconsistencias en Linux/Render
+            df = pd.read_excel(file, engine='openpyxl')
+        
+        # Limpieza y Normalización
+        df.columns = [str(c).upper().strip() for c in df.columns]
+        df = df.fillna("")
+        
+        # Normalizar ITEMPLAN (quitar .0 de Excel y limpiar espacios)
+        if 'ITEMPLAN' in df.columns:
+            df['ITEMPLAN'] = df['ITEMPLAN'].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
 
-        # Procesamos por ITEMPLAN
-        for itp, group in df.groupby('ITEMPLAN'):
-            if itp in cache_obras:
-                obra_db = cache_obras[itp]
+        for col in df.columns:
+            if col != 'ITEMPLAN':
+                df[col] = df[col].astype(str).str.strip()
+
+        total_rows = len(df)
+        imported = 0
+        updated = 0
+        discarded = 0
+
+        # Obtener todos los registros actuales
+        obras_actuales = GestionObra.query.all()
+        cache_obras = {} 
+        for o in obras_actuales:
+            try:
+                data = json.loads(o.data_json)
+                itp = data.get('ITEMPLAN')
+                if itp:
+                    cache_obras[itp] = o
+            except Exception as eje:
+                print(f"Error cargando obra ID {o.id}: {eje}")
+
+        # Obtener filtros
+        filtros_dict = {}
+        if filter_active:
+            todos_los_filtros = FiltroMaestro.query.all()
+            for f in todos_los_filtros:
+                entidad = f.entidad.strip()
+                if entidad not in filtros_dict:
+                    filtros_dict[entidad] = []
+                filtros_dict[entidad].append(f.valor.strip())
+
+        manual_cols_names = [c.nombre.upper().strip() for c in ColumnaManual.query.all()]
+
+        # --- Lógica Detalle Plan ---
+        if source_type == 'detalleplanCSV':
+            if 'VALORIZ MANO DE OBRA' in df.columns:
+                df['VALORIZ MANO DE OBRA'] = pd.to_numeric(df['VALORIZ MANO DE OBRA'], errors='coerce').fillna(0)
+            
+            def join_unique(series):
+                parts = [str(v).strip() for v in series.unique() if v and str(v).strip().lower() not in ["", "nan", "none", "0", "0.0"]]
+                return ', '.join(sorted(list(set(parts))))
+
+            for itp, group in df.groupby('ITEMPLAN'):
+                if itp in cache_obras:
+                    obra_db = cache_obras[itp]
+                    data_actual = json.loads(obra_db.data_json)
+
+                    mask_mo = pd.Series([False] * len(group), index=group.index)
+                    for col in ['PO', 'AREA']:
+                        if col in group.columns:
+                            mask_mo = mask_mo | group[col].astype(str).str.upper().str.startswith('MO_')
+                    
+                    mo_group = group[mask_mo]
+                    if not mo_group.empty and 'VALORIZ MANO DE OBRA' in mo_group.columns:
+                        data_actual['VALORIZ MANO DE OBRA'] = float(mo_group['VALORIZ MANO DE OBRA'].sum())
+
+                    mask_mat = pd.Series([False] * len(group), index=group.index)
+                    for col in ['PO', 'AREA']:
+                        if col in group.columns:
+                            mask_mat = mask_mat | group[col].astype(str).str.upper().str.startswith('MAT_')
+                    
+                    mat_group = group[mask_mat]
+                    if not mat_group.empty:
+                        if 'PO' in mat_group.columns:
+                            data_actual['PO'] = join_unique(mat_group['PO'])
+                        if 'VR' in mat_group.columns:
+                            data_actual['VR'] = join_unique(mat_group['VR'])
+                    
+                    obra_db.data_json = json.dumps(data_actual)
+                    updated += 1
+                else:
+                    discarded += 1
+
+            db.session.commit()
+            return jsonify({
+                "total": total_rows, "imported": 0, "updated": updated, "discarded": discarded, "source": source_type
+            })
+
+        # --- Lógica General ---
+        for _, row in df.iterrows():
+            fila_dict = row.to_dict()
+            fila_dict['__source'] = source_type
+            
+            should_discard = False
+            if filter_active:
+                for entidad, valores_permitidos in filtros_dict.items():
+                    if entidad in fila_dict:
+                        val_actual = str(fila_dict[entidad] or "").strip()
+                        if val_actual not in valores_permitidos:
+                            should_discard = True
+                            break
+            
+            if should_discard:
+                discarded += 1
+                continue
+            
+            itemplan_nuevo = fila_dict.get('ITEMPLAN')
+            
+            if itemplan_nuevo in cache_obras:
+                obra_db = cache_obras[itemplan_nuevo]
                 data_actual = json.loads(obra_db.data_json)
-
-                # 1. Lógica para Mano de Obra (MO_) -> VALORIZACIÓN
-                mask_mo = pd.Series([False] * len(group), index=group.index)
-                for col in ['PO', 'AREA']:
-                    if col in group.columns:
-                        mask_mo = mask_mo | group[col].astype(str).str.upper().str.startswith('MO_')
                 
-                mo_group = group[mask_mo]
-                if not mo_group.empty:
-                    data_actual['VALORIZ MANO DE OBRA'] = float(mo_group['VALORIZ MANO DE OBRA'].sum())
+                if source_type == 'manual_update':
+                    manual_updated = False
+                    for col_name, val in fila_dict.items():
+                        c_upper = col_name.upper().strip()
+                        if c_upper in manual_cols_names:
+                            data_actual[c_upper] = str(val).strip() if val else ""
+                            manual_updated = True
+                    
+                    if manual_updated:
+                        obra_db.data_json = json.dumps(data_actual)
+                        updated += 1
+                    else:
+                        discarded += 1
+                    continue
 
-                # 2. Lógica para Materiales (MAT_) -> PO y VR
-                mask_mat = pd.Series([False] * len(group), index=group.index)
-                for col in ['PO', 'AREA']:
-                    if col in group.columns:
-                        mask_mat = mask_mat | group[col].astype(str).str.upper().str.startswith('MAT_')
+                if 'ESTADO PLAN' in fila_dict:
+                    data_actual['ESTADO PLAN'] = fila_dict['ESTADO PLAN']
+                if 'SUBESTADO TRUNCO' in fila_dict:
+                    data_actual['SUBESTADO TRUNCO'] = fila_dict['SUBESTADO TRUNCO']
                 
-                mat_group = group[mask_mat]
-                if not mat_group.empty:
-                    if 'PO' in mat_group.columns:
-                        data_actual['PO'] = join_unique(mat_group['PO'])
-                    if 'VR' in mat_group.columns:
-                        data_actual['VR'] = join_unique(mat_group['VR'])
+                if source_type == 'reporte_cotizacion' and 'ESTADO' in fila_dict:
+                    data_actual['ESTADO'] = fila_dict['ESTADO']
+                if source_type == 'reporte_pdt_validar_cert' and 'SITUACION' in fila_dict:
+                    data_actual['SITUACION'] = fila_dict['SITUACION']
                 
                 obra_db.data_json = json.dumps(data_actual)
                 updated += 1
+            elif source_type == 'planobraCSV':
+                nueva_obra = GestionObra(data_json=json.dumps(fila_dict))
+                db.session.add(nueva_obra)
+                imported += 1
             else:
                 discarded += 1
 
         db.session.commit()
         return jsonify({
-            "total": total_rows,
-            "imported": 0,
-            "updated": updated,
-            "discarded": discarded,
-            "source": source_type
+            "total": total_rows, "imported": imported, "updated": updated, "discarded": discarded, "source": source_type
         })
-    # --- Fin Lógica Detalle Plan ---
-
-    for _, row in df.iterrows():
-        fila_dict = row.to_dict()
-        fila_dict['__source'] = source_type
-        
-        # 1. Validar Filtrado Maestro
-        should_discard = False
-        if filter_active:
-            for entidad, valores_permitidos in filtros_dict.items():
-                if entidad in fila_dict:
-                    val_actual = str(fila_dict[entidad] or "").strip()
-                    if val_actual not in valores_permitidos:
-                        should_discard = True
-                        break
-        
-        if should_discard:
-            discarded += 1
-            continue
-        
-        itemplan_nuevo = fila_dict.get('ITEMPLAN')
-        
-        # 2. Lógica de Actualización vs Inserción
-        if itemplan_nuevo in cache_obras:
-            # Caso EXISTE: Solo actualizamos campos específicos (ESTADO PLAN y SUBESTADO TRUNCO)
-            obra_db = cache_obras[itemplan_nuevo]
-            data_actual = json.loads(obra_db.data_json)
-            
-            if source_type == 'manual_update':
-                # Caso MANUAL: Actualizamos cualquier columna que coincida con manual_cols_names
-                manual_updated = False
-                for col_name, val in fila_dict.items():
-                    c_upper = col_name.upper().strip()
-                    if c_upper in manual_cols_names:
-                        data_actual[c_upper] = str(val).strip() if val else ""
-                        manual_updated = True
-                
-                if manual_updated:
-                    obra_db.data_json = json.dumps(data_actual)
-                    updated += 1
-                else:
-                    discarded += 1
-                continue
-
-            if 'ESTADO PLAN' in fila_dict:
-                data_actual['ESTADO PLAN'] = fila_dict['ESTADO PLAN']
-            if 'SUBESTADO TRUNCO' in fila_dict:
-                data_actual['SUBESTADO TRUNCO'] = fila_dict['SUBESTADO TRUNCO']
-            
-            # Nuevos reportes: Cotización y PDT Cert
-            if source_type == 'reporte_cotizacion' and 'ESTADO' in fila_dict:
-                data_actual['ESTADO'] = fila_dict['ESTADO']
-            if source_type == 'reporte_pdt_validar_cert' and 'SITUACION' in fila_dict:
-                data_actual['SITUACION'] = fila_dict['SITUACION']
-            
-            obra_db.data_json = json.dumps(data_actual)
-            updated += 1
-        elif source_type == 'planobraCSV':
-            # Caso NUEVO: SOLO si es la base principal
-            nueva_obra = GestionObra(data_json=json.dumps(fila_dict))
-            db.session.add(nueva_obra)
-            imported += 1
-        else:
-            # Si no existe y NO es la base principal, se descarta (no cruza nada)
-            discarded += 1
-
-    db.session.commit()
-    return jsonify({
-        "total": total_rows,
-        "imported": imported,
-        "updated": updated,
-        "discarded": discarded,
-        "source": source_type
-    })
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"ERROR EN IMPORTACIÓN:\n{error_trace}")
+        return jsonify({"error": str(e), "trace": error_trace}), 500
 
 # --- API: COLUMNAS MANUALES ---
 
