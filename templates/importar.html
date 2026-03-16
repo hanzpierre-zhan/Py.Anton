@@ -3,10 +3,17 @@
 {% block title %}Importar Datos{% endblock %}
 
 {% block content %}
-<div class="p-12 max-w-7xl mx-auto">
-    <div class="text-center mb-12">
-        <h2 class="text-4xl font-extrabold tracking-tight mb-2 text-white">Ingesta de Datos</h2>
-        <p class="text-lg text-slate-400 font-medium">Carga y consolida información desde múltiples fuentes.</p>
+<div class="p-4 md:p-12 max-w-7xl mx-auto">
+    <div class="flex flex-col md:flex-row justify-between items-center mb-12 gap-4">
+        <div>
+            <h2 class="text-4xl font-extrabold tracking-tight mb-2 text-white">Ingesta de Datos</h2>
+            <p class="text-lg text-slate-400 font-medium">Carga y consolida información desde múltiples fuentes.</p>
+        </div>
+        <div class="flex items-center gap-3 bg-slate-800/50 p-4 rounded-2xl border border-slate-700">
+            <div id="status-dot" class="w-2 h-2 rounded-full bg-slate-500"></div>
+            <span id="server-status" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Servidor: Conectando...</span>
+            <button onclick="checkPing()" class="ios-btn bg-slate-700 hover:bg-slate-600 text-white py-1 px-3 text-[10px] uppercase font-black tracking-tighter">Ping</button>
+        </div>
     </div>
 
     <!-- Import Sections (Rows) -->
@@ -289,5 +296,31 @@
 
         $('#resultsModal').removeClass('hidden');
     }
+    async function checkPing() {
+        const dot = $('#status-dot');
+        const text = $('#server-status');
+        text.text("Verificando...");
+        dot.removeClass('bg-emerald-500 bg-red-500').addClass('bg-yellow-500');
+        
+        try {
+            const start = Date.now();
+            const res = await fetch('/ping');
+            const end = Date.now();
+            if (res.ok) {
+                text.text(`Online (${end - start}ms)`);
+                dot.removeClass('bg-yellow-500').addClass('bg-emerald-500');
+            } else {
+                throw new Error();
+            }
+        } catch (e) {
+            text.text("Offline / Error");
+            dot.removeClass('bg-yellow-500').addClass('bg-red-500');
+        }
+    }
+
+    // Ping inicial y cada 30s
+    checkPing();
+    setInterval(checkPing, 30000);
 </script>
 {% endblock %}
+```

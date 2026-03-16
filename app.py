@@ -406,30 +406,33 @@ def process_import():
                 df[col] = df[col].astype(str).str.strip()
 
         total_rows = len(df)
+        print(f"Archivo cargado: {total_rows} filas. Iniciando pre-procesamiento...")
+
         imported = 0
         updated = 0
         discarded = 0
 
-        # Obtener todos los registros actuales
-        obras_actuales = GestionObra.query.all()
+        # Optimización: Obtener registros actuales
         cache_obras = {} 
-        for o in obras_actuales:
+        obras_actuales = GestionObra.query.all()
+        for idx, o in enumerate(obras_actuales):
             try:
                 data = json.loads(o.data_json)
                 itp = data.get('ITEMPLAN')
                 if itp:
                     cache_obras[itp] = o
-            except Exception as eje:
-                print(f"Error cargando obra ID {o.id}: {eje}")
+            except: continue
+            if idx % 500 == 0 and idx > 0:
+                print(f"Cache: {idx} registros procesados...")
 
-        # Obtener filtros
+        print(f"Cache listo. Cruzando datos...")
+
+        # Obtener filtros de forma eficiente
         filtros_dict = {}
         if filter_active:
-            todos_los_filtros = FiltroMaestro.query.all()
-            for f in todos_los_filtros:
+            for f in FiltroMaestro.query.all():
                 entidad = f.entidad.strip()
-                if entidad not in filtros_dict:
-                    filtros_dict[entidad] = []
+                if entidad not in filtros_dict: filtros_dict[entidad] = []
                 filtros_dict[entidad].append(f.valor.strip())
 
         manual_cols_names = [c.nombre.upper().strip() for c in ColumnaManual.query.all()]
@@ -480,10 +483,13 @@ def process_import():
             })
 
         # --- Lógica General ---
-        for _, row in df.iterrows():
+        for i, (index, row) in enumerate(df.iterrows()):
             fila_dict = row.to_dict()
             fila_dict['__source'] = source_type
             
+            if i % 200 == 0 and i > 0:
+                print(f"Procesando fila {i}/{total_rows}...")
+
             should_discard = False
             if filter_active:
                 for entidad, valores_permitidos in filtros_dict.items():
@@ -536,6 +542,10 @@ def process_import():
                 imported += 1
             else:
                 discarded += 1
+
+            # Commit parcial cada 500 filas para evitar bloqueos largos
+            if i % 500 == 0 and i > 0:
+                db.session.commit()
 
         db.session.commit()
         return jsonify({
