@@ -5,6 +5,7 @@ from flask import Flask, render_template, request, jsonify, send_file, session, 
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+from werkzeug.exceptions import HTTPException
 import io
 from sqlalchemy import text
 import gc
@@ -31,6 +32,7 @@ db_path = os.path.join(BASE_DIR, "anton.db")
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'anton_production_secret_key_2025')
+app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024 # Limit 32MB
 db = SQLAlchemy(app)
 
 # --- MODELOS DE DATOS ---
@@ -98,6 +100,24 @@ try:
         print("Base de datos inicializada correctamente.")
 except Exception as e:
     print(f"Error al inicializar la base de datos: {e}")
+
+# --- GLOBAL ERROR HANDLER ---
+@app.errorhandler(Exception)
+def handle_global_exception(e):
+    if isinstance(e, HTTPException):
+        return e
+    import traceback
+    error_trace = traceback.format_exc()
+    print(f"CRASH DETECTADO:\n{error_trace}")
+    return jsonify({
+        "error": "Error interno del servidor",
+        "message": str(e),
+        "trace": error_trace
+    }), 500
+
+@app.route('/ping')
+def ping():
+    return jsonify({"status": "ok", "time": datetime.now().isoformat()})
 
 # --- HELPERS DE SESIÓN ---
 
@@ -422,47 +442,78 @@ def process_import():
         with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(filename)[1]) as tmp:
             file.save(tmp.name)
             temp_path = tmp.name
+        
+        filesize = os.path.getsize(temp_path)
+        print(f"DEBUG: [Fase 0] Archivo guardado en {temp_path}. Tamaño: {filesize / 1024:.2f} KB")
 
         def get_rows_iter(path):
-            if path.endswith('.csv'):
-                with open(path, 'r', encoding='utf-8', errors='ignore') as f:
-                    reader = csv.DictReader(f)
-                    for row in reader:
-                        yield {str(k).upper().strip(): str(v).strip() for k, v in row.items() if k}
-            else:
-                # openpyxl read_only es clave para no agotar la RAM
-                wb = load_workbook(filename=path, read_only=True, data_only=True)
-                sheet = wb.active
-                headers = []
-                for i, row in enumerate(sheet.iter_rows(values_only=True)):
-                    if i == 0:
-                        headers = [str(h).upper().strip() if h else f"COL_{idx}" for idx, h in enumerate(row)]
-                        continue
-                    if not any(row): continue
-                    # Normalizamos la fila a dict de strings
-                    yield dict(zip(headers, [str(v).strip() if v is not None else "" for v in row]))
-                wb.close()
+            count = 0
+            # Intentar detectar el tipo real si la extensión engaña
+            is_csv = path.lower().endswith('.csv')
+            try:
+                if is_csv:
+                    # Probamos si es CSV real
+                    with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+                        line = f.readline()
+                        if ';' not in line and ',' not in line and '\t' not in line:
+                            is_csv = False # Probablemente es Excel mal nombrado
+                
+                if is_csv:
+                    print(f"DEBUG: Procesando como CSV: {path}")
+                    with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+                        reader = csv.DictReader(f)
+                        for row in reader:
+                            count += 1
+                            if count % 1000 == 0: print(f"DEBUG: Leyendo fila CSV {count}...")
+                            yield {str(k).upper().strip(): str(v).strip() for k, v in row.items() if k}
+                else:
+                    print(f"DEBUG: Procesando como XLSX/BIFF: {path}")
+                    wb = load_workbook(filename=path, read_only=True, data_only=True)
+                    sheet = wb.active
+                    headers = []
+                    for i, row in enumerate(sheet.iter_rows(values_only=True)):
+                        if i == 0:
+                            headers = [str(h).upper().strip() if h else f"COL_{idx}" for idx, h in enumerate(row)]
+                            continue
+                        if not any(row): continue
+                        count += 1
+                        if count % 1000 == 0: print(f"DEBUG: Leyendo fila Excel {count}...")
+                        yield dict(zip(headers, [str(v).strip() if v is not None else "" for v in row]))
+                    wb.close()
+            except Exception as e:
+                print(f"ERROR EN ITERATOR: {e}")
+                raise
 
         def normalize_itp(itp):
+            if itp is None: return ""
             itp = str(itp).strip()
             if itp.lower() in ["", "nan", "none"]: return ""
             if itp.endswith('.0'): itp = itp[:-2]
             return itp
 
-        # Fase 1: Cache de IDs
-        print("DEBUG: [Fase 1] Cacheando base de datos...")
+        # Fase 1: Cache de IDs de forma eficiente
+        print("DEBUG: [Fase 1] Cacheando base de datos (Lazy Mode)...")
         cache_obras_id = {} 
         try:
-            res = db.session.execute(text("SELECT id, json_extract(data_json, '$.ITEMPLAN') FROM gestion_obras")).all()
-        except:
-            res = db.session.execute(text("SELECT id, data_json FROM gestion_obras")).all()
-            
-        for row in res:
-            oid, itp = row[0], row[1]
-            if not itp and len(row) > 1 and isinstance(row[1], str) and row[1].startswith('{'):
-                try: itp = json.loads(row[1]).get('ITEMPLAN')
+            # Intentamos usar json_extract si el SQLite lo soporta
+            q = text("SELECT id, json_extract(data_json, '$.ITEMPLAN') FROM gestion_obras")
+            res_proxy = db.session.execute(q)
+            for row in res_proxy:
+                oid, itp = row[0], row[1]
+                if itp: cache_obras_id[normalize_itp(itp)] = oid
+        except Exception as e:
+            print(f"DEBUG: json_extract falló, usando modo manual: {e}")
+            # Fallback seguro: Iteramos sobre el generador, no sobre .all()
+            q = text("SELECT id, data_json FROM gestion_obras")
+            res_proxy = db.session.execute(q)
+            for row in res_proxy:
+                oid, d_json = row[0], row[1]
+                try:
+                    # Buscamos el ITEMPLAN sin cargar todo el dict si es posible
+                    # (aquí sí cargamos para ser exactos, pero uno a la vez)
+                    itp = json.loads(d_json).get('ITEMPLAN')
+                    if itp: cache_obras_id[normalize_itp(itp)] = oid
                 except: continue
-            if itp: cache_obras_id[normalize_itp(itp)] = oid
             
         print(f"DEBUG: Cache listo con {len(cache_obras_id)} registros.")
         gc.collect()
@@ -487,7 +538,9 @@ def process_import():
                 # Lógica de agregación igual a la anterior pero sin DataFrames
                 is_mo = any(str(row.get(c, '')).upper().startswith('MO_') for c in ['PO', 'AREA'])
                 if is_mo and 'VALORIZ MANO DE OBRA' in row:
-                    try: val = float(row['VALORIZ MANO DE OBRA'].replace(',', ''))
+                    try: 
+                        raw_val = str(row['VALORIZ MANO DE OBRA']).replace(',', '').strip()
+                        val = float(raw_val) if raw_val else 0.0
                     except: val = 0.0
                     mo_sums[itp] = mo_sums.get(itp, 0.0) + val
                 
@@ -511,6 +564,8 @@ def process_import():
                     obra.data_json = safe_json_dumps(data)
                     updated += 1
                 db.session.commit()
+                db.session.expunge_all() # LIBERAR RAM
+                gc.collect()
             if temp_path and os.path.exists(temp_path): os.remove(temp_path)
             return jsonify({"imported": 0, "updated": updated, "source": source_type})
 
@@ -551,19 +606,26 @@ def process_import():
                     db.session.execute(GestionObra.__table__.insert(), objs_to_insert)
                     objs_to_insert = []
                 db.session.commit()
+                db.session.expunge_all() # LIBERAR RAM
                 gc.collect()
+                print(f"DEBUG: Batch {count} procesado y guardado.")
 
         if objs_to_insert: db.session.execute(GestionObra.__table__.insert(), objs_to_insert)
         db.session.commit()
-        if temp_path and os.path.exists(temp_path): os.remove(temp_path)
         return jsonify({"imported": imported, "updated": updated, "discarded": discarded, "source": source_type})
 
     except Exception as e:
-        if temp_path and os.path.exists(temp_path): os.remove(temp_path)
         import traceback
         err = traceback.format_exc()
-        print(f"ERROR: {e}\n{err}")
+        print(f"ERROR CRITICO EN IMPORT: {e}\n{err}")
         return jsonify({"error": str(e), "trace": err}), 500
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+                print(f"DEBUG: Archivo temporal eliminado: {temp_path}")
+            except Exception as ex:
+                print(f"AVISO: No se pudo eliminar temp: {ex}")
 
 
 # --- API: COLUMNAS MANUALES ---
