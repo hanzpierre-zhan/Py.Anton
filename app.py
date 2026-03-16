@@ -153,31 +153,7 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated
 
-@app.errorhandler(500)
-def handle_500(e):
-    import traceback
-    error_msg = str(e) or "Error desconocido"
-    trace = traceback.format_exc()
-    print(f"CRITICAL 500: {error_msg}\n{trace}")
-    return jsonify({
-        "error": "Error interno (JSON context)",
-        "message": error_msg,
-        "trace": trace
-    }), 500
-
-@app.errorhandler(Exception)
-def handle_exception(e):
-    # Catch-all to ensure JSON response even for non-500 exceptions
-    import traceback
-    return jsonify({
-        "error": "Excepción no manejada",
-        "message": str(e),
-        "trace": traceback.format_exc()
-    }), 500
-
-@app.route('/ping')
-def ping():
-    return "pong", 200
+# --- CONFIGURACIÓN DE CONTEXTO ---
 
 @app.context_processor
 def inject_current_user():
@@ -938,4 +914,5 @@ def export_proyectos():
                      as_attachment=True, download_name=f'Consolidado_ANTON_{datetime.now().strftime("%Y%m%d")}.xlsx')
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
