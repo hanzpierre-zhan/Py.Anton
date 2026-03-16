@@ -701,6 +701,38 @@ def delete_mapeo(id):
     db.session.commit()
     return jsonify({"success": True})
 
+# --- HELPERS PARA DATOS ---
+
+def augment_virtual_columns(row_dict, mapeos, filter_configs):
+    """
+    Agrega columnas virtuales a un diccionario de datos basado en mapeos y configuraciones.
+    """
+    # Identificar todas las columnas virtuales posibles
+    v_cols_set = new_set = set()
+    for cfg in filter_configs.values():
+        for vc in cfg.get('virtual_cols', []):
+            v_cols_set.add(vc)
+    
+    for vc in v_cols_set:
+        if vc not in row_dict:
+            row_dict[vc] = ""
+        
+        # Recorremos todos los mapeos para esta columna virtual
+        for m in mapeos:
+            crit_col = m.columna_criterio
+            crit_val = str(m.valor_criterio).strip()
+            
+            row_val = str(row_dict.get(crit_col, "")).strip()
+            if row_val == crit_val:
+                # Verificar si este criterio permite esta columna virtual según la config
+                cfg = filter_configs.get(crit_col, {})
+                allowed_cols = cfg.get('virtual_cols', [])
+                
+                mapeo_valores = json.loads(m.valores_json)
+                if vc in allowed_cols and vc in mapeo_valores:
+                    row_dict[vc] = mapeo_valores[vc]
+    return row_dict
+
 # --- API: ACTUALIZACIÓN DE PROYECTO ---
 
 @app.route('/api/proyectos/update-field', methods=['POST'])
@@ -740,12 +772,20 @@ def get_proyectos():
         for r in user.restricciones:
             restricciones[r.columna] = json.loads(r.valores_json)
 
+    # Pre-cargar mapeos y configuraciones para columnas virtuales
+    mapeos = MapeoFiltro.query.all()
+    configs = {c.columna: {"tipo": c.tipo, "virtual_cols": json.loads(c.virtual_cols_json or '[]')} 
+               for c in ConfiguracionFiltro.query.all()}
+
     obras = GestionObra.query.all()
     resultado = []
     hoy = datetime.now()
     
     for o in obras:
         data = json.loads(o.data_json)
+        
+        # Aumentar datos con columnas virtuales ANTES de filtrar por restricciones
+        data = augment_virtual_columns(data, mapeos, configs)
         
         # Aplicar filtrado por restricciones
         skip = False
