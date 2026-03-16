@@ -7,6 +7,19 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import io
 from sqlalchemy import text
+import gc
+import tempfile
+import csv
+from openpyxl import load_workbook
+
+def safe_json_dumps(obj):
+    def converter(o):
+        if hasattr(o, 'isoformat'):
+            return o.isoformat()
+        if hasattr(o, 'to_dict'):
+            return o.to_dict()
+        return str(o)
+    return json.dumps(obj, default=converter, ensure_ascii=False)
 
 # Configuración de rutas
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -393,6 +406,7 @@ def delete_entidad():
 @app.route('/api/import', methods=['POST'])
 @admin_required
 def process_import():
+    temp_path = None
     try:
         file = request.files.get('file')
         source_type = request.form.get('source_type') or 'planobraCSV'
@@ -401,186 +415,156 @@ def process_import():
         
         if not file: return jsonify({"error": "No hay archivo"}), 400
         
-        filename = file.filename
-        print(f"DEBUG: Iniciando importación: {filename}, tipo: {source_type}")
+        filename = file.filename.lower()
+        print(f"DEBUG: [Fase 0] Guardando archivo temporal: {filename}")
         
-        # Leemos el archivo directamente desde el stream de Flask para ahorrar RAM
-        if filename.lower().endswith('.csv'):
-            df = pd.read_csv(file)
-        else:
-            df = pd.read_excel(file, engine='openpyxl')
-        
-        print(f"DEBUG: DataFrame cargado. Filas: {len(df)}")
-        
-        # Limpieza y Normalización
-        df.columns = [str(c).upper().strip() for c in df.columns]
-        df = df.fillna("")
-        
-        # Normalizar ITEMPLAN (quitar .0 de Excel y limpiar espacios)
-        if 'ITEMPLAN' in df.columns:
-            df['ITEMPLAN'] = df['ITEMPLAN'].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
+        # Guardamos en disco para poder hacer dos pasadas sin gastar RAM
+        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(filename)[1]) as tmp:
+            file.save(tmp.name)
+            temp_path = tmp.name
 
-        for col in df.columns:
-            if col != 'ITEMPLAN':
-                df[col] = df[col].astype(str).str.strip()
+        def get_rows_iter(path):
+            if path.endswith('.csv'):
+                with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+                    reader = csv.DictReader(f)
+                    for row in reader:
+                        yield {str(k).upper().strip(): str(v).strip() for k, v in row.items() if k}
+            else:
+                # openpyxl read_only es clave para no agotar la RAM
+                wb = load_workbook(filename=path, read_only=True, data_only=True)
+                sheet = wb.active
+                headers = []
+                for i, row in enumerate(sheet.iter_rows(values_only=True)):
+                    if i == 0:
+                        headers = [str(h).upper().strip() if h else f"COL_{idx}" for idx, h in enumerate(row)]
+                        continue
+                    if not any(row): continue
+                    # Normalizamos la fila a dict de strings
+                    yield dict(zip(headers, [str(v).strip() if v is not None else "" for v in row]))
+                wb.close()
 
-        total_rows = len(df)
-        print(f"Archivo cargado: {total_rows} filas. Iniciando pre-procesamiento...")
+        def normalize_itp(itp):
+            itp = str(itp).strip()
+            if itp.lower() in ["", "nan", "none"]: return ""
+            if itp.endswith('.0'): itp = itp[:-2]
+            return itp
 
-        imported = 0
-        updated = 0
-        discarded = 0
-
-        # Optimización: Obtener registros actuales de forma eficiente (solo ID y ITEMPLAN)
+        # Fase 1: Cache de IDs
+        print("DEBUG: [Fase 1] Cacheando base de datos...")
         cache_obras_id = {} 
-        # Usamos una query directa para evitar cargar miles de objetos en memoria
-        res = db.session.execute(text("SELECT id, data_json FROM gestion_obras")).all()
-        
-        for oid, d_json in res:
-            try:
-                # Extraemos el ITEMPLAN de forma cruda para no estresar la RAM
-                # Buscamos el patrón "ITEMPLAN": "..." en el string si es posible, o json.loads
-                d = json.loads(d_json)
-                itp = d.get('ITEMPLAN')
-                if itp:
-                    cache_obras_id[itp] = oid
-            except: continue
+        try:
+            res = db.session.execute(text("SELECT id, json_extract(data_json, '$.ITEMPLAN') FROM gestion_obras")).all()
+        except:
+            res = db.session.execute(text("SELECT id, data_json FROM gestion_obras")).all()
+            
+        for row in res:
+            oid, itp = row[0], row[1]
+            if not itp and len(row) > 1 and isinstance(row[1], str) and row[1].startswith('{'):
+                try: itp = json.loads(row[1]).get('ITEMPLAN')
+                except: continue
+            if itp: cache_obras_id[normalize_itp(itp)] = oid
             
         print(f"DEBUG: Cache listo con {len(cache_obras_id)} registros.")
+        gc.collect()
 
-        # Obtener filtros de forma eficiente
+        # Filtros maestros
         filtros_dict = {}
         if filter_active:
             for f in FiltroMaestro.query.all():
-                entidad = f.entidad.strip()
-                if entidad not in filtros_dict: filtros_dict[entidad] = []
-                filtros_dict[entidad].append(f.valor.strip())
+                e, v = f.entidad.strip(), f.valor.strip()
+                if e not in filtros_dict: filtros_dict[e] = []
+                filtros_dict[e].append(v)
 
         manual_cols_names = [c.nombre.upper().strip() for c in ColumnaManual.query.all()]
-
-        # --- Lógica Detalle Plan ---
+        imported, updated, discarded = 0, 0, 0
+        
         if source_type == 'detalleplanCSV':
-            if 'VALORIZ MANO DE OBRA' in df.columns:
-                df['VALORIZ MANO DE OBRA'] = pd.to_numeric(df['VALORIZ MANO DE OBRA'], errors='coerce').fillna(0)
-            
-            def join_unique(series):
-                parts = [str(v).strip() for v in series.unique() if v and str(v).strip().lower() not in ["", "nan", "none", "0", "0.0"]]
-                return ', '.join(sorted(list(set(parts))))
+            print("DEBUG: [Fase 2] Agregando Detalle Plan (Streaming)...")
+            mo_sums, po_sets, vr_sets = {}, {}, {}
+            for row in get_rows_iter(temp_path):
+                itp = normalize_itp(row.get('ITEMPLAN', ''))
+                if not itp: continue
+                # Lógica de agregación igual a la anterior pero sin DataFrames
+                is_mo = any(str(row.get(c, '')).upper().startswith('MO_') for c in ['PO', 'AREA'])
+                if is_mo and 'VALORIZ MANO DE OBRA' in row:
+                    try: val = float(row['VALORIZ MANO DE OBRA'].replace(',', ''))
+                    except: val = 0.0
+                    mo_sums[itp] = mo_sums.get(itp, 0.0) + val
+                
+                is_mat = any(str(row.get(c, '')).upper().startswith('MAT_') for c in ['PO', 'AREA'])
+                if is_mat:
+                    po_sets.setdefault(itp, set()).add(row.get('PO', ''))
+                    vr_sets.setdefault(itp, set()).add(row.get('VR', ''))
 
-            for itp, group in df.groupby('ITEMPLAN'):
-                if itp in cache_obras_id:
-                    oid = cache_obras_id[itp]
-                    obra_db = db.session.get(GestionObra, oid)
-                    if not obra_db: continue
-                    data_actual = json.loads(obra_db.data_json)
-
-                    mask_mo = pd.Series([False] * len(group), index=group.index)
-                    for col in ['PO', 'AREA']:
-                        if col in group.columns:
-                            mask_mo = mask_mo | group[col].astype(str).str.upper().str.startswith('MO_')
-                    
-                    mo_group = group[mask_mo]
-                    if not mo_group.empty and 'VALORIZ MANO DE OBRA' in mo_group.columns:
-                        data_actual['VALORIZ MANO DE OBRA'] = float(mo_group['VALORIZ MANO DE OBRA'].sum())
-
-                    mask_mat = pd.Series([False] * len(group), index=group.index)
-                    for col in ['PO', 'AREA']:
-                        if col in group.columns:
-                            mask_mat = mask_mat | group[col].astype(str).str.upper().str.startswith('MAT_')
-                    
-                    mat_group = group[mask_mat]
-                    if not mat_group.empty:
-                        if 'PO' in mat_group.columns:
-                            data_actual['PO'] = join_unique(mat_group['PO'])
-                        if 'VR' in mat_group.columns:
-                            data_actual['VR'] = join_unique(mat_group['VR'])
-                    
-                    obra_db.data_json = json.dumps(data_actual)
+            itps_to_update = list(set(list(mo_sums.keys()) + list(po_sets.keys())))
+            for i in range(0, len(itps_to_update), 500):
+                batch = itps_to_update[i:i+500]
+                ids = [cache_obras_id[itp] for itp in batch if itp in cache_obras_id]
+                if not ids: continue
+                obras = GestionObra.query.filter(GestionObra.id.in_(ids)).all()
+                for obra in obras:
+                    data = json.loads(obra.data_json)
+                    itp_k = normalize_itp(data.get('ITEMPLAN', ''))
+                    if itp_k in mo_sums: data['VALORIZ MANO DE OBRA'] = mo_sums[itp_k]
+                    if itp_k in po_sets: data['PO'] = ', '.join(sorted(list(po_sets[itp_k] - {"", None})))
+                    if itp_k in vr_sets: data['VR'] = ', '.join(sorted(list(vr_sets[itp_k] - {"", None})))
+                    obra.data_json = safe_json_dumps(data)
                     updated += 1
-                else:
-                    discarded += 1
-
-            db.session.commit()
-            return jsonify({
-                "total": total_rows, "imported": 0, "updated": updated, "discarded": discarded, "source": source_type
-            })
-
-        # --- Lógica General ---
-        for i, (index, row) in enumerate(df.iterrows()):
-            fila_dict = row.to_dict()
-            fila_dict['__source'] = source_type
-            
-            if i % 200 == 0 and i > 0:
-                print(f"Procesando fila {i}/{total_rows}...")
-
-            should_discard = False
-            if filter_active:
-                for entidad, valores_permitidos in filtros_dict.items():
-                    if entidad in fila_dict:
-                        val_actual = str(fila_dict[entidad] or "").strip()
-                        if val_actual not in valores_permitidos:
-                            should_discard = True
-                            break
-            
-            if should_discard:
-                discarded += 1
-                continue
-            
-            itemplan_nuevo = fila_dict.get('ITEMPLAN')
-            
-            if itemplan_nuevo in cache_obras_id:
-                oid = cache_obras_id[itemplan_nuevo]
-                obra_db = db.session.get(GestionObra, oid)
-                if not obra_db: continue
-                data_actual = json.loads(obra_db.data_json)
-                
-                if source_type == 'manual_update':
-                    manual_updated = False
-                    for col_name, val in fila_dict.items():
-                        c_upper = col_name.upper().strip()
-                        if c_upper in manual_cols_names:
-                            data_actual[c_upper] = str(val).strip() if val else ""
-                            manual_updated = True
-                    
-                    if manual_updated:
-                        obra_db.data_json = json.dumps(data_actual)
-                        updated += 1
-                    else:
-                        discarded += 1
-                    continue
-
-                if 'ESTADO PLAN' in fila_dict:
-                    data_actual['ESTADO PLAN'] = fila_dict['ESTADO PLAN']
-                if 'SUBESTADO TRUNCO' in fila_dict:
-                    data_actual['SUBESTADO TRUNCO'] = fila_dict['SUBESTADO TRUNCO']
-                
-                if source_type == 'reporte_cotizacion' and 'ESTADO' in fila_dict:
-                    data_actual['ESTADO'] = fila_dict['ESTADO']
-                if source_type == 'reporte_pdt_validar_cert' and 'SITUACION' in fila_dict:
-                    data_actual['SITUACION'] = fila_dict['SITUACION']
-                
-                obra_db.data_json = json.dumps(data_actual)
-                updated += 1
-            elif source_type == 'planobraCSV':
-                nueva_obra = GestionObra(data_json=json.dumps(fila_dict))
-                db.session.add(nueva_obra)
-                imported += 1
-            else:
-                discarded += 1
-
-            # Commit parcial cada 500 filas para evitar bloqueos largos
-            if i % 500 == 0 and i > 0:
                 db.session.commit()
+            if temp_path and os.path.exists(temp_path): os.remove(temp_path)
+            return jsonify({"imported": 0, "updated": updated, "source": source_type})
 
+        # Modo General Streaming
+        print("DEBUG: [Fase 2] Streaming General...")
+        objs_to_insert = []
+        count = 0
+        for row in get_rows_iter(temp_path):
+            count += 1
+            itp = normalize_itp(row.get('ITEMPLAN', ''))
+            if not itp: discarded += 1; continue
+            
+            if filter_active:
+                skip = False
+                for ent, vals in filtros_dict.items():
+                    if row.get(ent) not in vals: skip = True; break
+                if skip: discarded += 1; continue
+
+            if itp in cache_obras_id:
+                obra = db.session.get(GestionObra, cache_obras_id[itp])
+                if obra:
+                    data = json.loads(obra.data_json)
+                    if source_type == 'manual_update':
+                        for k, v in row.items():
+                            if k in manual_cols_names: data[k] = v
+                    else:
+                        for k in ['ESTADO PLAN', 'SUBESTADO TRUNCO', 'ESTADO', 'SITUACION']:
+                            if k in row: data[k] = row[k]
+                    obra.data_json = safe_json_dumps(data)
+                    updated += 1
+            elif source_type == 'planobraCSV':
+                objs_to_insert.append({"data_json": safe_json_dumps(row)})
+                imported += 1
+            else: discarded += 1
+
+            if count % 500 == 0:
+                if objs_to_insert:
+                    db.session.execute(GestionObra.__table__.insert(), objs_to_insert)
+                    objs_to_insert = []
+                db.session.commit()
+                gc.collect()
+
+        if objs_to_insert: db.session.execute(GestionObra.__table__.insert(), objs_to_insert)
         db.session.commit()
-        return jsonify({
-            "total": total_rows, "imported": imported, "updated": updated, "discarded": discarded, "source": source_type
-        })
+        if temp_path and os.path.exists(temp_path): os.remove(temp_path)
+        return jsonify({"imported": imported, "updated": updated, "discarded": discarded, "source": source_type})
+
     except Exception as e:
+        if temp_path and os.path.exists(temp_path): os.remove(temp_path)
         import traceback
-        error_trace = traceback.format_exc()
-        print(f"ERROR EN IMPORTACIÓN:\n{error_trace}")
-        return jsonify({"error": str(e), "trace": error_trace}), 500
+        err = traceback.format_exc()
+        print(f"ERROR: {e}\n{err}")
+        return jsonify({"error": str(e), "trace": err}), 500
+
 
 # --- API: COLUMNAS MANUALES ---
 
