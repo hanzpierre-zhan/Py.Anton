@@ -100,28 +100,43 @@ def login_required(f):
 def admin_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if 'user_id' not in session:
-            return redirect(url_for('route_login'))
-        
-        user_rol = session.get('user_rol')
         user_id = session.get('user_id')
-        
-        if not user_rol and user_id:
-            u = db.session.get(Usuario, user_id)
-            if u:
-                user_rol = u.rol
-                session['user_rol'] = user_rol
-        
-        if not user_rol or user_rol.upper() not in ['ADMIN', 'ADMINISTRADOR']:
+        if not user_id:
+            return redirect(url_for('route_login'))
+            
+        u = db.session.get(Usuario, user_id)
+        if not u:
+            session.clear()
+            return redirect(url_for('route_login'))
+            
+        rol_upper = (u.rol or "").upper()
+        if rol_upper not in ['ADMIN', 'ADMINISTRADOR']:
             return redirect(url_for('route_proyectos'))
+            
+        # Refrescar sesión para consistencia con frontend
+        session['user_id'] = u.id
+        session['user_rol'] = u.rol
         return f(*args, **kwargs)
     return decorated
 
 @app.errorhandler(500)
 def handle_500(e):
     import traceback
+    error_msg = str(e) or "Error desconocido"
+    trace = traceback.format_exc()
+    print(f"CRITICAL 500: {error_msg}\n{trace}")
     return jsonify({
-        "error": "Error interno del servidor (Global)",
+        "error": "Error interno (JSON context)",
+        "message": error_msg,
+        "trace": trace
+    }), 500
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    # Catch-all to ensure JSON response even for non-500 exceptions
+    import traceback
+    return jsonify({
+        "error": "Excepción no manejada",
         "message": str(e),
         "trace": traceback.format_exc()
     }), 500
@@ -378,20 +393,24 @@ def delete_entidad():
 def process_import():
     try:
         file = request.files.get('file')
-        source_type = request.form.get('source_type', 'planobraCSV')
+        source_type = request.form.get('source_type') or 'planobraCSV'
         filter_active = request.form.get('filter_active') == 'true'
-        entidad_filtro = request.form.get('entidad_filtro', 'ESTADO PLAN').strip()
+        entidad_filtro = (request.form.get('entidad_filtro') or 'ESTADO PLAN').strip()
         
         if not file: return jsonify({"error": "No hay archivo"}), 400
         
         filename = file.filename
-        print(f"Iniciando importación: {filename}, tipo: {source_type}")
+        print(f"DEBUG: Iniciando importación: {filename}, tipo: {source_type}, filter_active: {filter_active}")
         
-        if filename.endswith('.csv'):
-            df = pd.read_csv(file)
+        # Leemos el archivo en memoria de forma segura
+        file_bytes = io.BytesIO(file.read())
+        
+        if filename.lower().endswith('.csv'):
+            df = pd.read_csv(file_bytes)
         else:
-            # Forzamos engine openpyxl para evitar inconsistencias en Linux/Render
-            df = pd.read_excel(file, engine='openpyxl')
+            df = pd.read_excel(file_bytes, engine='openpyxl')
+        
+        print(f"DEBUG: Archivo leído. Filas: {len(df)}. Columnas: {list(df.columns)}")
         
         # Limpieza y Normalización
         df.columns = [str(c).upper().strip() for c in df.columns]
