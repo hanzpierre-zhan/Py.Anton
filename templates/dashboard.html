@@ -7,15 +7,15 @@
     <div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
             <h2 class="text-4xl font-extrabold tracking-tight text-white uppercase">Dashboard</h2>
-            <p class="text-lg font-medium text-slate-400">Estado de proyectos segmentado por línea y responsable.</p>
+            <p class="text-lg font-medium text-[#8a8f98]">Estado de proyectos segmentado por línea y responsable.</p>
         </div>
         
         <!-- Filtro de Jefatura -->
         <div class="w-full md:w-72">
-            <label class="text-[10px] font-black uppercase text-slate-500 mb-2 block flex items-center gap-2">
-                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Filtrar por Jefatura
+            <label class="text-[10px] font-black uppercase text-[#8a8f98] mb-2 block flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#2563eb]"></span> Filtrar por Jefatura
             </label>
-            <select id="jefaturaFilter" class="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-2xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all">
+            <select id="jefaturaFilter" class="w-full bg-[#181b21] border border-[#30363d] text-[#c9d1d9] rounded-md px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-[#3b82f6]/20 transition-all">
                 <option value="ALL">TODAS LAS JEFATURAS</option>
             </select>
         </div>
@@ -24,36 +24,36 @@
     <!-- MANTENIMIENTO -->
     <div class="mb-16">
         <div class="flex items-center gap-4 mb-8">
-            <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white">
+            <div class="w-12 h-12 bg-[#3b82f6] rounded-md flex items-center justify-center text-white">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
             </div>
             <h3 class="text-2xl font-black tracking-tight text-white uppercase">Mantenimiento</h3>
         </div>
 
         <!-- Cobra -->
-        <div class="mb-10 pl-4 border-l-2 border-slate-800">
+        <div class="mb-10 pl-4 border-l-2 border-[#30363d]">
             <div class="flex justify-between items-end mb-4 pr-10">
-                <span class="text-xs font-black uppercase text-blue-500 tracking-widest">COBRA</span>
+                <span class="text-xs font-black uppercase text-[#3b82f6] tracking-widest">COBRA</span>
                 <div class="text-right">
-                    <p class="text-[10px] font-bold text-slate-500 uppercase" id="countMantCobra">0 Proyectos</p>
+                    <p class="text-[10px] font-bold text-[#8a8f98] uppercase" id="countMantCobra">0 Proyectos</p>
                     <p class="text-xl font-black text-white" id="amountMantCobra">S/ 0.00</p>
                 </div>
             </div>
-            <div class="ios-card p-8 overflow-x-auto custom-scrollbar bg-slate-900/40 backdrop-blur-sm border-slate-800">
+            <div class="ios-card p-8 overflow-x-auto custom-scrollbar bg-[#0e1116]  border-[#30363d]">
                 <div id="pipelineMantCobra" class="flex items-center justify-start min-w-max"></div>
             </div>
         </div>
 
         <!-- Integratel -->
-        <div class="pl-4 border-l-2 border-slate-800">
+        <div class="pl-4 border-l-2 border-[#30363d]">
             <div class="flex justify-between items-end mb-4 pr-10">
-                <span class="text-xs font-black uppercase text-blue-500 tracking-widest">INTEGRATEL</span>
+                <span class="text-xs font-black uppercase text-[#3b82f6] tracking-widest">INTEGRATEL</span>
                 <div class="text-right">
-                    <p class="text-[10px] font-bold text-slate-500 uppercase" id="countMantIntegratel">0 Proyectos</p>
+                    <p class="text-[10px] font-bold text-[#8a8f98] uppercase" id="countMantIntegratel">0 Proyectos</p>
                     <p class="text-xl font-black text-white" id="amountMantIntegratel">S/ 0.00</p>
                 </div>
             </div>
-            <div class="ios-card p-8 overflow-x-auto custom-scrollbar bg-slate-900/40 backdrop-blur-sm border-slate-800">
+            <div class="ios-card p-8 overflow-x-auto custom-scrollbar bg-[#0e1116]  border-[#30363d]">
                 <div id="pipelineMantIntegratel" class="flex items-center justify-start min-w-max"></div>
             </div>
         </div>
@@ -62,36 +62,36 @@
     <!-- INGENIERÍA -->
     <div class="mb-12">
         <div class="flex items-center gap-4 mb-8">
-            <div class="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white">
+            <div class="w-12 h-12 bg-[#3b82f6] rounded-md flex items-center justify-center text-white">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
             </div>
             <h3 class="text-2xl font-black tracking-tight text-white uppercase">Ingeniería</h3>
         </div>
 
         <!-- Cobra -->
-        <div class="mb-10 pl-4 border-l-2 border-slate-800">
+        <div class="mb-10 pl-4 border-l-2 border-[#30363d]">
             <div class="flex justify-between items-end mb-4 pr-10">
-                <span class="text-xs font-black uppercase text-indigo-500 tracking-widest">COBRA</span>
+                <span class="text-xs font-black uppercase text-[#3b82f6] tracking-widest">COBRA</span>
                 <div class="text-right">
-                    <p class="text-[10px] font-bold text-slate-500 uppercase" id="countIngCobra">0 Proyectos</p>
+                    <p class="text-[10px] font-bold text-[#8a8f98] uppercase" id="countIngCobra">0 Proyectos</p>
                     <p class="text-xl font-black text-white" id="amountIngCobra">S/ 0.00</p>
                 </div>
             </div>
-            <div class="ios-card p-8 overflow-x-auto custom-scrollbar bg-slate-900/40 backdrop-blur-sm border-slate-800">
+            <div class="ios-card p-8 overflow-x-auto custom-scrollbar bg-[#0e1116]  border-[#30363d]">
                 <div id="pipelineIngCobra" class="flex items-center justify-start min-w-max"></div>
             </div>
         </div>
 
         <!-- Integratel -->
-        <div class="pl-4 border-l-2 border-slate-800">
+        <div class="pl-4 border-l-2 border-[#30363d]">
             <div class="flex justify-between items-end mb-4 pr-10">
-                <span class="text-xs font-black uppercase text-indigo-500 tracking-widest">INTEGRATEL</span>
+                <span class="text-xs font-black uppercase text-[#3b82f6] tracking-widest">INTEGRATEL</span>
                 <div class="text-right">
-                    <p class="text-[10px] font-bold text-slate-500 uppercase" id="countIngIntegratel">0 Proyectos</p>
+                    <p class="text-[10px] font-bold text-[#8a8f98] uppercase" id="countIngIntegratel">0 Proyectos</p>
                     <p class="text-xl font-black text-white" id="amountIngIntegratel">S/ 0.00</p>
                 </div>
             </div>
-            <div class="ios-card p-8 overflow-x-auto custom-scrollbar bg-slate-900/40 backdrop-blur-sm border-slate-800">
+            <div class="ios-card p-8 overflow-x-auto custom-scrollbar bg-[#0e1116]  border-[#30363d]">
                 <div id="pipelineIngIntegratel" class="flex items-center justify-start min-w-max"></div>
             </div>
         </div>
@@ -224,7 +224,7 @@
     function renderPipeline(containerId, data, themeColor, isIng) {
         const container = $(`#${containerId}`);
         if (data.length === 0) {
-            container.html('<p class="text-slate-500 font-bold italic py-4 opacity-50">Sin proyectos.</p>');
+            container.html('<p class="text-[#8a8f98] font-bold italic py-4 opacity-50">Sin proyectos.</p>');
             return;
         }
 
@@ -268,21 +268,21 @@
             
             // For Lime theme (Integratel), use specific classes, otherwise use themeColor
             const isLime = themeColor === 'lime';
-            const borderClass = isMax ? 'border-rose-500' : (isExempt ? 'border-slate-800' : (isLime ? 'border-lime-500/50' : `border-${themeColor}-950/30`));
-            const textClass = isMax ? 'text-rose-500' : (isExempt ? 'text-slate-600' : (isLime ? 'text-lime-400' : `text-${themeColor}-400`));
-            const LabelClass = isMax ? 'text-rose-400' : (isExempt ? 'text-slate-700' : 'text-slate-500');
+            const borderClass = isMax ? 'border-rose-500' : (isExempt ? 'border-[#30363d]' : (isLime ? 'border-lime-500/50' : `border-${themeColor}-950/30`));
+            const textClass = isMax ? 'text-rose-500' : (isExempt ? 'text-[#8b949e]' : (isLime ? 'text-lime-400' : `text-${themeColor}-400`));
+            const LabelClass = isMax ? 'text-rose-400' : (isExempt ? 'text-slate-700' : 'text-[#8a8f98]');
 
             return `
                 <div class="flex items-center">
                     <div class="flex flex-col items-center group ${isExempt ? 'opacity-50' : ''}">
-                        <div class="w-16 h-16 rounded-full border-4 ${borderClass} bg-slate-900 flex items-center justify-center mb-3 transition-all ${isExempt ? '' : 'hover:scale-110 shadow-lg shadow-black/20 group-hover:shadow-black/40'}">
+                        <div class="w-16 h-16 rounded-full border-4 ${borderClass} bg-[#181b21] flex items-center justify-center mb-3 transition-all ${isExempt ? '' : 'hover:scale-110 shadow-lg shadow-black/20 group-hover:shadow-black/40'}">
                             <span class="text-xl font-black ${textClass}">${count}</span>
                         </div>
-                        <span class="text-[9px] uppercase font-black tracking-tighter ${LabelClass} w-20 text-center leading-tight group-hover:text-slate-300 transition-colors">${state}</span>
+                        <span class="text-[9px] uppercase font-black tracking-tighter ${LabelClass} w-20 text-center leading-tight group-hover:text-[#c9d1d9] transition-colors">${state}</span>
                         <span class="text-[10px] font-black mt-1 ${textClass}">${formatMoneyShort(sum)}</span>
                     </div>
                     ${i < sortedStates.length - 1 ? `
-                        <div class="w-8 h-1 bg-slate-800 mx-1 -mt-14 rounded-full opacity-30"></div>
+                        <div class="w-8 h-1 bg-[#21262d] mx-1 -mt-14 rounded-full opacity-30"></div>
                     ` : ''}
                 </div>
             `;
@@ -299,18 +299,18 @@
     }
 
     .custom-scrollbar::-webkit-scrollbar-track {
-        background: #0f172a;
+        background: #0e1116;
         border-radius: 10px;
     }
 
     .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #334155;
+        background: #30363d;
         border-radius: 10px;
-        border: 2px solid #0f172a;
+        border: 2px solid #0e1116;
     }
 
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: #475569;
+        background: #4b5563;
     }
 </style>
 {% endblock %}

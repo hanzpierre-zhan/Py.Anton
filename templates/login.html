@@ -9,8 +9,8 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            background-color: #0e1116;
+            color: #ffffff;
             -webkit-font-smoothing: antialiased;
         }
 
@@ -29,17 +29,17 @@
             animation: logoPulse 3s ease-in-out infinite;
         }
         @keyframes logoPulse {
-            0%, 100% { box-shadow: 0 0 25px rgba(59,130,246,0.4), 0 0 50px rgba(59,130,246,0.15); }
-            50%       { box-shadow: 0 0 40px rgba(59,130,246,0.7), 0 0 80px rgba(59,130,246,0.3); }
+            0%, 100% { box-shadow: 0 0 25px rgba(59, 130, 246, 0.4), 0 0 50px rgba(59, 130, 246, 0.15); }
+            50%       { box-shadow: 0 0 40px rgba(59, 130, 246, 0.7), 0 0 80px rgba(59, 130, 246, 0.3); }
         }
 
         .input-field {
             width: 100%;
-            background: rgba(30,41,59,0.8);
-            border: 1px solid #334155;
-            border-radius: 14px;
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 0;
             padding: 14px 18px;
-            color: #f8fafc;
+            color: #ffffff;
             font-size: 14px;
             font-weight: 500;
             transition: all 0.2s ease;
@@ -47,26 +47,26 @@
         }
         .input-field:focus {
             border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
             background: rgba(30,41,59,1);
         }
-        .input-field::placeholder { color: #475569; }
+        .input-field::placeholder { color: #4b5563; }
 
         .btn-login {
             width: 100%;
-            background: #2563eb;
+            background: #3b82f6;
             color: white;
             font-weight: 800;
             font-size: 15px;
             padding: 14px;
-            border-radius: 14px;
+            border-radius: 0;
             border: none;
             cursor: pointer;
             transition: all 0.2s ease;
-            box-shadow: 0 4px 25px rgba(37,99,235,0.4);
+            box-shadow: 0 4px 25px rgba(59, 130, 246, 0.4);
             letter-spacing: 0.01em;
         }
-        .btn-login:hover  { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 8px 30px rgba(37,99,235,0.5); }
+        .btn-login:hover  { background: #2563eb; transform: translateY(-1px); box-shadow: 0 8px 30px rgba(59, 130, 246, 0.5); }
         .btn-login:active { transform: scale(0.98); }
         .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
@@ -90,26 +90,26 @@
 
     <!-- Background blobs -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/8 rounded-full blur-3xl"></div>
-        <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-indigo-600/8 rounded-full blur-3xl"></div>
+        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-[#3b82f6]/8 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-[#3b82f6]/8 rounded-full blur-3xl"></div>
     </div>
 
     <div class="relative w-full max-w-sm fade-in">
 
         <!-- Card -->
-        <div class="bg-slate-900/90 border border-slate-700/60 rounded-3xl p-8 glow-blue backdrop-blur-sm">
+        <div class="bg-[#181b21]/90 border border-[#30363d]/60 rounded-none p-8 glow-blue">
 
             <!-- Logo + Brand -->
             <div class="flex flex-col items-center mb-8">
-                <div class="w-16 h-16 bg-blue-600 rounded-2xl shadow-2xl flex items-center justify-center text-white font-black text-3xl italic tracking-tighter logo-pulse mb-4">
+                <div class="w-16 h-16 bg-[#3b82f6] rounded-sm shadow-2xl flex items-center justify-center text-white font-black text-3xl italic tracking-tighter logo-pulse mb-4">
                     A
                 </div>
                 <h1 class="text-2xl font-black text-white tracking-tight">ANTON</h1>
-                <p class="text-slate-500 text-xs font-semibold mt-1 uppercase tracking-widest">Sistema de Gestión</p>
+                <p class="text-[#8a8f98] text-xs font-semibold mt-1 uppercase tracking-widest">Sistema de Gestión</p>
             </div>
 
             <!-- Error message -->
-            <div id="errorMsg" class="hidden mb-5 p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-sm font-semibold text-center">
+            <div id="errorMsg" class="hidden mb-5 p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-sm text-rose-400 text-sm font-semibold text-center">
                 <span id="errorText">Error de autenticación</span>
             </div>
 
@@ -117,15 +117,15 @@
             <form id="loginForm" onsubmit="doLogin(event)" class="space-y-4">
 
                 <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Usuario</label>
+                    <label class="block text-[10px] font-black text-[#8a8f98] uppercase tracking-widest mb-2">Usuario</label>
                     <input type="text" id="loginUsuario" class="input-field" placeholder="Ingresa tu usuario" autocomplete="username" required>
                 </div>
 
                 <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Contraseña</label>
+                    <label class="block text-[10px] font-black text-[#8a8f98] uppercase tracking-widest mb-2">Contraseña</label>
                     <div class="relative">
                         <input type="password" id="loginPassword" class="input-field" placeholder="••••••••" autocomplete="current-password" style="padding-right: 48px;" required>
-                        <button type="button" onclick="togglePass()" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
+                        <button type="button" onclick="togglePass()" class="absolute right-4 top-1/2 -translate-y-1/2 text-[#8a8f98] hover:text-[#c9d1d9] transition-colors">
                             <svg id="eyeOpen" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>

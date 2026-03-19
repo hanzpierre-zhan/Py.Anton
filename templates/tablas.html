@@ -7,11 +7,11 @@
     <div class="flex justify-between items-end mb-10">
         <div>
             <h2 class="text-4xl font-extrabold tracking-tight text-white">Tablas Maestras</h2>
-            <p class="text-lg font-medium text-slate-400">Configura tus listas de validación dinámica.</p>
+            <p class="text-lg font-medium text-[#8a8f98]">Configura tus listas de validación dinámica.</p>
         </div>
         <div class="flex gap-3">
             <button onclick="openNewEntityModal()"
-                class="ios-btn ios-btn-primary flex items-center gap-2 shadow-xl shadow-blue-500/20">
+                class="ios-btn ios-btn-primary flex items-center gap-2 shadow-xl shadow-[#1e3a8a]/20">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                         d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
@@ -30,26 +30,26 @@
 
 <!-- Modal Nueva Entidad -->
 <div id="entityModal"
-    class="hidden fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-[200]">
+    class="hidden fixed inset-0 bg-[#0e1116]/80 flex items-center justify-center z-[200]">
     <div class="ios-card p-10 max-w-2xl w-full">
-        <h3 class="text-2xl font-bold mb-6">Crear Nueva Tabla</h3>
+        <h3 class="text-2xl font-bold mb-6 text-white">Crear Nueva Tabla</h3>
 
         <div class="mb-6">
-            <label class="text-[10px] font-bold text-slate-500 uppercase ml-2 mb-1 block">Nombre de la Tabla</label>
+            <label class="text-[10px] font-bold text-[#8a8f98] uppercase ml-2 mb-1 block">Nombre de la Tabla</label>
             <input type="text" id="entityName" placeholder="Ej: ESTADO PLAN, CIUDAD..."
-                class="w-full bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 outline-none font-bold text-blue-400 placeholder:text-slate-600">
+                class="w-full bg-[#21262d] border border-[#30363d] rounded-none px-5 py-4 outline-none font-bold text-[#60a5fa] placeholder:text-[#8b949e] focus:ring-2 focus:ring-[#3b82f6]/20">
         </div>
 
         <div class="mb-8">
-            <label class="text-[10px] font-black text-slate-500 uppercase ml-2 mb-1 block tracking-widest">Contenido
+            <label class="text-[10px] font-black text-[#8a8f98] uppercase ml-2 mb-1 block tracking-widest">Contenido
                 Inicial (Opcional)</label>
             <textarea id="entityInitialValues"
-                class="w-full h-48 bg-slate-800 border border-slate-700 rounded-3xl p-6 outline-none font-mono text-sm text-slate-300 focus:border-blue-500/50 transition-all shadow-inner"
+                class="w-full h-48 bg-[#21262d] border border-[#30363d] rounded-none p-6 outline-none font-mono text-sm text-[#c9d1d9] placeholder:text-[#8b949e] focus:border-[#3b82f6]/50 transition-all shadow-inner"
                 placeholder="Pega aquí la lista de valores (uno por línea o separados por comas)."></textarea>
         </div>
 
-        <div class="flex justify-between items-center">
-            <button onclick="$('#entityModal').addClass('hidden')" class="font-bold text-gray-400">Cancelar</button>
+        <div class="flex justify-between items-center border-t border-[#30363d] pt-6">
+            <button onclick="$('#entityModal').addClass('hidden')" class="font-bold text-[#8a8f98] hover:text-white transition-colors">Cancelar</button>
             <button onclick="createNewTableWithValues()" class="ios-btn ios-btn-primary px-12">Crear Tabla</button>
         </div>
     </div>
@@ -57,12 +57,12 @@
 
 <!-- Modal Renombrar -->
 <div id="renameModal"
-    class="hidden fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-[200]">
+    class="hidden fixed inset-0 bg-[#0e1116]/80 flex items-center justify-center z-[200]">
     <div class="ios-card p-8 max-w-sm w-full">
-        <h3 class="text-xl font-bold mb-2 text-center">Renombrar Lista</h3>
-        <p id="renameMsg" class="text-[10px] text-slate-500 mb-6 text-center font-bold uppercase tracking-widest"></p>
+        <h3 class="text-xl font-bold mb-2 text-center text-white">Renombrar Lista</h3>
+        <p id="renameMsg" class="text-[10px] text-[#8a8f98] mb-6 text-center font-bold uppercase tracking-widest"></p>
         <input type="text" id="newEntityName" placeholder="Nuevo Nombre"
-            class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 mb-8 outline-none font-black text-blue-600 focus:ring-2 focus:ring-blue-500/10 transition-all">
+            class="w-full bg-[#21262d] border border-[#30363d] rounded-none px-5 py-4 mb-8 outline-none font-black text-[#60a5fa] placeholder:text-[#8b949e] focus:ring-2 focus:ring-[#3b82f6]/10 transition-all">
         <div class="flex gap-3">
             <button onclick="$('#renameModal').addClass('hidden')"
                 class="flex-1 ios-btn ios-btn-secondary">Cancelar</button>
@@ -73,16 +73,16 @@
 
 <!-- Modal Carga Masiva -->
 <div id="massiveModal"
-    class="hidden fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-[200]">
+    class="hidden fixed inset-0 bg-[#0e1116]/80 flex items-center justify-center z-[200]">
     <div class="ios-card p-10 max-w-2xl w-full">
-        <h3 id="massiveTitle" class="text-2xl font-bold mb-2">Carga Masiva</h3>
-        <p class="text-xs text-slate-500 mb-6 font-bold uppercase tracking-widest">Pega los valores separados por líneas
+        <h3 id="massiveTitle" class="text-2xl font-bold mb-2 text-white">Carga Masiva</h3>
+        <p class="text-xs text-[#8a8f98] mb-6 font-bold uppercase tracking-widest">Pega los valores separados por líneas
             o comas</p>
         <textarea id="massiveText"
-            class="w-full h-64 bg-slate-50 border-2 border-slate-100 rounded-3xl p-6 mb-8 outline-none font-mono text-sm text-slate-600 focus:bg-white focus:border-blue-200 transition-all shadow-inner"
+            class="w-full h-64 bg-[#21262d] border border-[#30363d] rounded-none p-6 mb-8 outline-none font-mono text-sm text-[#c9d1d9] placeholder:text-[#8b949e] focus:border-[#3b82f6]/50 transition-all shadow-inner"
             placeholder="Valor 1&#10;Valor 2&#10;Valor 3..."></textarea>
-        <div class="flex justify-between items-center">
-            <button onclick="$('#massiveModal').addClass('hidden')" class="font-bold text-gray-400">Cancelar</button>
+        <div class="flex justify-between items-center border-t border-[#30363d] pt-6">
+            <button onclick="$('#massiveModal').addClass('hidden')" class="font-bold text-[#8a8f98] hover:text-white transition-colors">Cancelar</button>
             <button onclick="executeMassive()" class="ios-btn ios-btn-primary px-12">Procesar Lista</button>
         </div>
     </div>
@@ -117,14 +117,14 @@
                         <div class="flex-1">
                             <div class="flex items-center gap-2 mb-1">
                                 <h3 class="font-black text-xl tracking-tighter text-white">${ent}</h3>
-                                <button onclick="openRenameModal('${ent}')" class="text-slate-300 hover:text-blue-500 transition-colors" title="Renombrar Tabla">
+                                <button onclick="openRenameModal('${ent}')" class="text-[#c9d1d9] hover:text-[#3b82f6] transition-colors" title="Renombrar Tabla">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                 </button>
-                                <button onclick="confirmDeleteEntity('${ent}')" class="text-slate-300 hover:text-rose-500 transition-colors" title="Eliminar Tabla Completa">
+                                <button onclick="confirmDeleteEntity('${ent}')" class="text-[#c9d1d9] hover:text-rose-500 transition-colors" title="Eliminar Tabla Completa">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                 </button>
                             </div>
-                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">${items.length} Registros</p>
+                            <p class="text-[9px] font-black text-[#8a8f98] uppercase tracking-widest">${items.length} Registros</p>
                         </div>
                         <button onclick="confirmClear('${ent}')" class="text-[10px] font-black text-rose-400 hover:text-rose-600 uppercase tracking-tighter transition-colors">Vaciar</button>
                     </div>
@@ -133,15 +133,15 @@
                     <div class="relative mb-6 shrink-0">
                         <input type="text" placeholder="Buscar en ${ent}..." 
                             onkeyup="filterList(this, '${ent}')"
-                            class="w-full bg-slate-800 border border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-xs font-semibold text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20 transition-all">
-                        <svg class="w-4 h-4 text-slate-500 absolute left-4 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            class="w-full bg-[#21262d] border border-[#30363d] rounded-none py-2.5 pl-10 pr-4 text-xs font-semibold text-[#c9d1d9] outline-none focus:ring-2 focus:ring-[#3b82f6]/20 transition-all">
+                        <svg class="w-4 h-4 text-[#8a8f98] absolute left-4 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
                     
                     <div class="flex-1 overflow-y-auto space-y-1 mb-6 pr-1 custom-scroll" id="list-${ent.replace(/\s+/g, '_')}">
                         <!-- Items iterate -->
                     </div>
                     
-                    <button onclick="openEditContent('${ent}')" class="w-full ios-btn ios-btn-secondary text-[10px] font-black uppercase tracking-widest shrink-0 border-slate-700 bg-slate-800 hover:bg-slate-700 transition-all text-slate-400">Editar Contenido</button>
+                    <button onclick="openEditContent('${ent}')" class="w-full ios-btn ios-btn-secondary text-[10px] font-black uppercase tracking-widest shrink-0 border-[#30363d] bg-[#21262d] hover:bg-[#30363d] transition-all text-[#8a8f98]">Editar Contenido</button>
                 </div>
             `);
 
@@ -151,9 +151,9 @@
             } else {
                 items.forEach(item => {
                     listContainer.append(`
-                        <div class="flex justify-between items-center py-2 px-4 bg-slate-800/50 rounded-xl text-xs font-bold border border-slate-700 hover:border-blue-500/30 hover:bg-slate-800 transition-all group mb-1 shadow-sm">
-                            <span class="truncate pr-4 text-slate-400 group-hover:text-blue-400">${item.valor}</span>
-                            <button onclick="deleteFiltro(${item.id})" class="text-slate-500 opacity-0 group-hover:opacity-100 hover:text-rose-500 transition-all">
+                        <div class="flex justify-between items-center py-2 px-4 bg-[#21262d]/50 rounded-none text-xs font-bold border border-[#30363d] hover:border-[#3b82f6]/30 hover:bg-[#21262d] transition-all group mb-1 shadow-sm">
+                            <span class="truncate pr-4 text-[#8a8f98] group-hover:text-[#60a5fa]">${item.valor}</span>
+                            <button onclick="deleteFiltro(${item.id})" class="text-[#8a8f98] opacity-0 group-hover:opacity-100 hover:text-rose-500 transition-all">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                             </button>
                         </div>
@@ -302,8 +302,8 @@
     }
 
     .custom-scroll::-webkit-scrollbar-thumb {
-        background: #1e293b;
-        border-radius: 10px;
+        background: #181b21;
+        border-radius: 0;
     }
 </style>
 {% endblock %}

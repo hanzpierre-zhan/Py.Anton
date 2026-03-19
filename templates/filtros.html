@@ -7,7 +7,7 @@
     <div class="flex justify-between items-end mb-10">
         <div>
             <h2 class="text-4xl font-extrabold tracking-tight text-white">Filtros Maestros</h2>
-            <p class="text-lg font-medium text-slate-400">Crea columnas virtuales basadas en mapeos de criterios.</p>
+            <p class="text-lg font-medium text-[#8a8f98]">Crea columnas virtuales basadas en mapeos de criterios.</p>
         </div>
         <div class="flex gap-3">
             <button onclick="openConfigModal()" class="ios-btn ios-btn-secondary flex items-center gap-2">
@@ -23,11 +23,11 @@
 
     <!-- Filtros y Gestión -->
     <div class="ios-card overflow-hidden">
-        <div class="p-6 bg-slate-900/50 border-b border-slate-700 flex justify-between items-center">
+        <div class="p-6 bg-[#0e1116] border-b border-[#30363d] flex justify-between items-center">
             <div class="flex gap-4 items-center">
-                <label class="text-[10px] font-black uppercase text-slate-500">Columna Criterio:</label>
+                <label class="text-[10px] font-black uppercase text-[#8a8f98]">Columna Criterio:</label>
                 <select id="criterioSelector" onchange="loadMapeos()"
-                    class="bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-sm font-bold text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20">
+                    class="bg-[#21262d] border border-[#30363d] rounded-none px-4 py-2 text-sm font-bold text-[#c9d1d9] outline-none focus:ring-2 focus:ring-[#3b82f6]/20">
                     <option value="">Selecciona una columna...</option>
                 </select>
             </div>
@@ -42,13 +42,13 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse" id="mapeosTable">
                 <thead>
-                    <tr class="bg-slate-900/80">
-                        <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-500 border-b border-slate-700">
+                    <tr class="bg-[#0e1116]">
+                        <th class="px-6 py-4 text-[10px] font-black uppercase text-[#8a8f98] border-b border-[#30363d]">
                             Valor en Columna Criterio</th>
                         <!-- Columnas virtuales dinámicas aquí -->
-                        <th id="dynamicHeaders" class="p-0 border-b border-slate-700"></th>
+                        <th id="dynamicHeaders" class="p-0 border-b border-[#30363d]"></th>
                         <th
-                            class="px-6 py-4 text-[10px] font-black uppercase text-slate-500 border-b border-slate-700 w-20 text-center">
+                            class="px-6 py-4 text-[10px] font-black uppercase text-[#8a8f98] border-b border-[#30363d] w-20 text-center">
                             Acciones</th>
                     </tr>
                 </thead>
@@ -62,10 +62,10 @@
 
 <!-- Modal Configuración de Columnas Virtuales -->
 <div id="configModal"
-    class="hidden fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-[200]">
+    class="hidden fixed inset-0 bg-[#0e1116]/80 flex items-center justify-center z-[200]">
     <div class="ios-card p-10 max-w-lg w-full">
-        <h3 class="text-2xl font-bold mb-6">Columnas Virtuales</h3>
-        <p class="text-xs text-slate-500 mb-6 font-bold uppercase tracking-widest leading-relaxed">
+        <h3 class="text-2xl font-bold mb-6 text-white">Columnas Virtuales</h3>
+        <p class="text-xs text-[#8a8f98] mb-6 font-bold uppercase tracking-widest leading-relaxed">
             Estas columnas no existen en tus datos reales. Se llenarán según los mapeos que definas.
         </p>
 
@@ -75,36 +75,36 @@
 
         <div class="flex gap-2 mb-8">
             <input type="text" id="newVirtualColName" placeholder="Nombre nueva columna (ej: MERCADO)"
-                class="flex-1 bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none font-bold text-blue-600">
+                class="flex-1 bg-[#21262d] border border-[#30363d] rounded-none px-5 py-4 outline-none font-bold text-[#60a5fa] placeholder:text-[#8b949e] focus:ring-2 focus:ring-[#3b82f6]/20">
             <button onclick="addVirtualCol()" class="ios-btn ios-btn-primary px-6">Añadir</button>
         </div>
 
-        <div class="flex justify-end pt-4 border-t border-slate-100">
+        <div class="flex justify-end pt-4 border-t border-[#30363d]">
             <button onclick="$('#configModal').addClass('hidden')" class="ios-btn ios-btn-secondary">Cerrar</button>
         </div>
     </div>
 </div>
 
 <!-- Modal Seleccionar Valor Criterio -->
-<div id="valueModal" class="hidden fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-[250]">
+<div id="valueModal" class="hidden fixed inset-0 bg-[#0e1116]/80 flex items-center justify-center z-[250]">
     <div class="ios-card p-10 max-w-lg w-full shadow-2xl">
         <div class="flex justify-between items-start mb-2">
             <div>
-                <h3 class="text-2xl font-bold">Nuevo Mapeo</h3>
-                <p id="valueModalSubtitle" class="text-xs text-slate-500 font-bold uppercase tracking-widest"></p>
+                <h3 class="text-2xl font-bold text-white">Nuevo Mapeo</h3>
+                <p id="valueModalSubtitle" class="text-xs text-[#8a8f98] font-bold uppercase tracking-widest"></p>
             </div>
-            <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100">
+            <div class="flex items-center gap-2 bg-[#21262d] px-3 py-1.5 rounded-none border border-[#30363d]">
                 <input type="checkbox" id="selectAllValues" onchange="toggleSelectAll(this.checked)"
-                    class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer">
+                    class="w-4 h-4 rounded border-[#30363d] text-[#3b82f6] focus:ring-[#3b82f6] cursor-pointer bg-[#21262d]">
                 <label for="selectAllValues"
-                    class="text-[10px] font-black uppercase text-slate-400 cursor-pointer">Todos</label>
+                    class="text-[10px] font-black uppercase text-[#8a8f98] cursor-pointer">Todos</label>
             </div>
         </div>
 
         <div class="relative mb-6">
             <input type="text" id="valueSearch" placeholder="Buscar valor..." onkeyup="filterValueList()"
-                class="w-full bg-slate-50 border-none rounded-xl py-3 pl-10 pr-4 text-sm font-semibold text-slate-600 outline-none focus:ring-2 focus:ring-blue-100 transition-all">
-            <svg class="w-5 h-5 text-slate-300 absolute left-3.5 top-3" fill="none" stroke="currentColor"
+                class="w-full bg-[#21262d] border border-[#30363d] rounded-none py-3 pl-10 pr-4 text-sm font-semibold text-[#c9d1d9] placeholder:text-[#8b949e] outline-none focus:ring-2 focus:ring-[#3b82f6]/20 transition-all">
+            <svg class="w-5 h-5 text-[#8a8f98] absolute left-3.5 top-3" fill="none" stroke="currentColor"
                 viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -116,16 +116,18 @@
         </div>
 
         <!-- Ingreso Manual de Valor -->
-        <div class="p-4 bg-blue-50/50 rounded-2xl border border-blue-100 mb-8">
-            <label class="text-[9px] font-black uppercase text-blue-500 block mb-2">O agregar valor manual:</label>
-            <div class="flex gap-2">
-                <input type="text" id="manualValueInput" placeholder="Escribe un valor nuevo..." 
-                    class="flex-1 bg-white border border-blue-200 rounded-xl px-4 py-2 text-sm font-bold text-blue-600 outline-none focus:ring-2 focus:ring-blue-500/20">
-                <button onclick="addManualValueToSelection()" class="bg-blue-600 text-white rounded-xl px-4 py-2 text-[10px] font-black uppercase hover:bg-blue-500 transition-all">Añadir</button>
+        <div class="p-4 bg-[#3b82f6]/5 rounded-none border border-[#3b82f6]/20 mb-8">
+            <label class="text-[9px] font-black uppercase text-[#60a5fa] block mb-2">O agregar valores manualmente (separados por renglón o coma):</label>
+            <div class="flex flex-col gap-2">
+                <textarea id="manualValueInput" placeholder="Ej: VALOR 1, VALOR 2&#10;o pega una lista de celdas desde Excel..." 
+                    class="w-full bg-[#21262d] border border-[#30363d] rounded-none px-4 py-3 text-sm font-bold text-[#c9d1d9] placeholder:text-[#8b949e] outline-none focus:ring-2 focus:ring-[#3b82f6]/20 resize-y min-h-[80px]"></textarea>
+                <div class="flex justify-end">
+                    <button onclick="addManualValueToSelection()" class="bg-[#3b82f6] text-white rounded-none px-6 py-2.5 text-[10px] font-black uppercase shadow-sm hover:shadow-md hover:bg-[#2563eb] transition-all">Añadir Valores</button>
+                </div>
             </div>
         </div>
 
-        <div class="flex justify-end gap-3 pt-6 border-t border-slate-100">
+        <div class="flex justify-end gap-3 pt-6 border-t border-[#30363d]">
             <button onclick="$('#valueModal').addClass('hidden')" class="ios-btn ios-btn-secondary">Cancelar</button>
             <button onclick="confirmMultiSelect()" id="confirmSelectBtn"
                 class="ios-btn ios-btn-primary px-8 relative overflow-hidden">
@@ -184,10 +186,10 @@
 
         vCols.forEach(col => {
             headerContainer.before(`
-                <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-500 border-b border-slate-700 dynamic-col">
+                <th class="px-6 py-4 text-[10px] font-black uppercase text-[#8a8f98] border-b border-[#30363d] dynamic-col">
                     <div class="flex items-center justify-between gap-2">
                         <span>${col}</span>
-                        <button onclick="fillDown('${col}')" title="Copiar primer valor hacia abajo" class="p-1 hover:bg-blue-100 rounded text-blue-400 transition-colors">
+                        <button onclick="fillDown('${col}')" title="Copiar primer valor hacia abajo" class="p-1 hover:bg-blue-100 rounded text-[#60a5fa] transition-colors">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
                         </button>
                     </div>
@@ -209,8 +211,8 @@
         }
 
         filteredMapeos.forEach((m, rowIndex) => {
-            let rowHtml = `<tr class="hover:bg-blue-500/5 transition-all border-b border-slate-800">
-                <td class="px-6 py-4 font-bold text-slate-300 text-sm">${m.valor_criterio}</td>`;
+            let rowHtml = `<tr class="hover:bg-[#3b82f6]/5 transition-all border-b border-[#30363d]">
+                <td class="px-6 py-4 font-bold text-[#c9d1d9] text-sm">${m.valor_criterio}</td>`;
 
             vCols.forEach(vc => {
                 const val = m.valores[vc] || "";
@@ -221,12 +223,12 @@
                         data-row-index="${rowIndex}"
                         onchange="saveMappingValue(${m.id}, '${vc}', this.value)"
                         onpaste="handlePaste(event, ${rowIndex}, '${vc}')"
-                        class="virtual-input w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-200 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
+                        class="virtual-input w-full bg-[#21262d] border border-[#30363d] rounded-none px-3 py-1.5 text-xs font-semibold text-[#c9d1d9] focus:ring-2 focus:ring-[#3b82f6]/20 outline-none transition-all hover:border-[#3b82f6]/40">
                 </td>`;
             });
 
             rowHtml += `<td class="px-6 py-4 text-center">
-                <button onclick="deleteMapeo(${m.id})" class="text-slate-300 hover:text-rose-500 transition-colors">
+                <button onclick="deleteMapeo(${m.id})" class="text-[#c9d1d9] hover:text-rose-500 transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                 </button>
             </td></tr>`;
@@ -277,9 +279,9 @@
         const list = $('#virtualColsList').empty();
         vCols.forEach(col => {
             list.append(`
-                <div class="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-100 group">
-                    <span class="font-bold text-slate-700 uppercase tracking-tight">${col}</span>
-                    <button onclick="removeVirtualCol('${col}')" class="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all">
+                <div class="flex justify-between items-center bg-[#21262d] p-4 rounded-none border border-[#30363d] group">
+                    <span class="font-bold text-[#c9d1d9] uppercase tracking-tight">${col}</span>
+                    <button onclick="removeVirtualCol('${col}')" class="text-[#8a8f98] hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
@@ -349,14 +351,14 @@
         $('#manualValueInput').val('');
 
         if (availableValues.length === 0) {
-            container.append('<p class="text-center py-4 text-slate-400 font-bold italic opacity-50">No hay más valores automáticos disponibles</p>');
+            container.append('<p class="text-center py-4 text-[#8a8f98] font-bold italic opacity-50">No hay más valores automáticos disponibles</p>');
         } else {
             availableValues.forEach(val => {
                 container.append(`
                     <div id="val-item-${val.replace(/[^a-z0-9]/gi, '_')}" onclick="toggleValueSelection('${val}')" 
-                         class="value-item group flex justify-between items-center p-4 bg-slate-50 hover:bg-blue-50 rounded-2xl cursor-pointer transition-all border border-slate-100 hover:border-blue-200 mb-2">
-                        <span class="font-bold text-slate-700">${val}</span>
-                        <div class="w-6 h-6 rounded-full border-2 border-slate-200 flex items-center justify-center transition-all check-indicator">
+                         class="value-item group flex justify-between items-center p-4 bg-[#21262d] hover:bg-[#30363d] rounded-none cursor-pointer transition-all border border-[#30363d] hover:border-[#3b82f6]/30 mb-2">
+                        <span class="font-bold text-[#c9d1d9]">${val}</span>
+                        <div class="w-6 h-6 rounded-none border-2 border-[#8a8f98] flex items-center justify-center transition-all check-indicator">
                             <svg class="w-4 h-4 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"></path></svg>
                         </div>
                     </div>
@@ -369,26 +371,32 @@
     }
 
     function addManualValueToSelection() {
-        const val = $('#manualValueInput').val().trim();
-        if (!val) return;
+        const rawVal = $('#manualValueInput').val().trim();
+        if (!rawVal) return;
         
-        // Agregar a la lista si no está
         const container = $('#valueListContainer');
-        const safeId = val.replace(/[^a-z0-9]/gi, '_');
+        const values = rawVal.split(/[\n,;]+/).map(v => v.trim()).filter(v => v.length > 0);
         
-        if ($(`#val-item-${safeId}`).length === 0) {
-            container.prepend(`
-                <div id="val-item-${safeId}" onclick="toggleValueSelection('${val}')" 
-                     class="value-item group flex justify-between items-center p-4 bg-slate-50 hover:bg-blue-50 rounded-2xl cursor-pointer transition-all border border-slate-100 hover:border-blue-200 mb-2">
-                    <span class="font-bold text-slate-700">${val}</span>
-                    <div class="w-6 h-6 rounded-full border-2 border-slate-200 flex items-center justify-center transition-all check-indicator">
-                        <svg class="w-4 h-4 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"></path></svg>
+        values.forEach(val => {
+            const safeId = val.replace(/[^a-z0-9]/gi, '_');
+            
+            if ($(`#val-item-${safeId}`).length === 0) {
+                container.prepend(`
+                    <div id="val-item-${safeId}" onclick="toggleValueSelection('${val}')" 
+                         class="value-item group flex justify-between items-center p-4 bg-[#21262d] hover:bg-[#30363d] rounded-none cursor-pointer transition-all border border-[#30363d] hover:border-[#3b82f6]/30 mb-2">
+                        <span class="font-bold text-[#c9d1d9]">${val}</span>
+                        <div class="w-6 h-6 rounded-none border-2 border-[#8a8f98] flex items-center justify-center transition-all check-indicator">
+                            <svg class="w-4 h-4 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
                     </div>
-                </div>
-            `);
-        }
+                `);
+            }
+            
+            if (!selectedValues.has(val)) {
+                toggleValueSelection(val);
+            }
+        });
         
-        toggleValueSelection(val);
         $('#manualValueInput').val('');
     }
 
@@ -397,14 +405,14 @@
         const item = $(`#val-item-${safeId}`);
         if (selectedValues.has(val)) {
             selectedValues.delete(val);
-            item.removeClass('bg-blue-600 border-blue-600 text-white').addClass('bg-slate-50 border-slate-100 text-slate-700');
-            item.find('.check-indicator').removeClass('bg-white border-white').addClass('border-slate-200');
+            item.removeClass('bg-[#3b82f6] border-[#3b82f6] text-white').addClass('bg-[#21262d] border-[#30363d] text-[#c9d1d9]');
+            item.find('.check-indicator').removeClass('bg-[#3b82f6] border-white').addClass('border-[#8a8f98]');
             item.find('svg').addClass('hidden');
         } else {
             selectedValues.add(val);
-            item.addClass('bg-blue-600 border-blue-600 text-white').removeClass('bg-slate-50 border-slate-100 text-slate-700');
-            item.find('.check-indicator').addClass('bg-white border-white').removeClass('border-slate-200');
-            item.find('svg').removeClass('hidden').addClass('text-blue-600');
+            item.addClass('bg-[#3b82f6] border-[#3b82f6] text-white').removeClass('bg-[#21262d] border-[#30363d] text-[#c9d1d9]');
+            item.find('.check-indicator').addClass('bg-[#3b82f6] border-white').removeClass('border-[#8a8f98]');
+            item.find('svg').removeClass('hidden');
         }
         updateConfirmBtn();
     }

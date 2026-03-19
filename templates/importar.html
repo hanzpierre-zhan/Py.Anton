@@ -7,12 +7,12 @@
     <div class="flex flex-col md:flex-row justify-between items-center mb-12 gap-4">
         <div>
             <h2 class="text-4xl font-extrabold tracking-tight mb-2 text-white">Ingesta de Datos</h2>
-            <p class="text-lg text-slate-400 font-medium">Carga y consolida información desde múltiples fuentes.</p>
+            <p class="text-lg text-[#8a8f98] font-medium">Carga y consolida información desde múltiples fuentes.</p>
         </div>
-        <div class="flex items-center gap-3 bg-slate-800/50 p-4 rounded-2xl border border-slate-700">
-            <div id="status-dot" class="w-2 h-2 rounded-full bg-slate-500"></div>
-            <span id="server-status" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Servidor: Conectando...</span>
-            <button onclick="checkPing()" class="ios-btn bg-slate-700 hover:bg-slate-600 text-white py-1 px-3 text-[10px] uppercase font-black tracking-tighter">Ping</button>
+        <div class="flex items-center gap-3 bg-[#21262d]/50 p-4 rounded-none border border-[#30363d]">
+            <div id="status-dot" class="w-2 h-2 rounded-none bg-[#f0f6fc]0"></div>
+            <span id="server-status" class="text-[10px] font-bold text-[#8a8f98] uppercase tracking-widest">Servidor: Conectando...</span>
+            <button onclick="checkPing()" class="ios-btn bg-[#30363d] hover:bg-slate-600 text-white py-1 px-3 text-[10px] uppercase font-black tracking-tighter">Ping</button>
         </div>
     </div>
 
@@ -21,23 +21,23 @@
         <!-- Row 1: Plan Obra -->
         <div class="ios-card p-6 flex flex-col md:flex-row items-center gap-6 border-l-8 border-blue-600">
             <div class="md:w-1/4">
-                <span class="text-[10px] uppercase font-bold text-blue-400 block mb-1">Fuente Principal</span>
+                <span class="text-[10px] uppercase font-bold text-[#60a5fa] block mb-1">Fuente Principal</span>
                 <h3 class="text-2xl font-bold text-slate-100">Plan Obra</h3>
-                <p class="text-xs text-slate-500 font-medium mb-4">Limpia base anterior</p>
+                <p class="text-xs text-[#8a8f98] font-medium mb-4">Limpia base anterior</p>
 
                 <!-- Filtrado Automático -->
-                <div class="bg-blue-500/10 p-4 rounded-2xl border border-blue-500/20">
+                <div class="bg-[#2563eb]/10 p-4 rounded-none border border-[#3b82f6]/20">
                     <div class="flex items-center justify-between gap-2">
                         <div class="flex-1">
                             <span
-                                class="text-[9px] font-black text-blue-400 uppercase block leading-tight tracking-wider">Filtrado
+                                class="text-[9px] font-black text-[#60a5fa] uppercase block leading-tight tracking-wider">Filtrado
                                 Maestro</span>
-                            <p class="text-[8px] text-slate-500 font-bold leading-tight mt-1">Sincronizado</p>
+                            <p class="text-[8px] text-[#8a8f98] font-bold leading-tight mt-1">Sincronizado</p>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer scale-90">
                             <input type="checkbox" id="filter-active" class="sr-only peer">
                             <div
-                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-none peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-none after:h-5 after:w-5 after:transition-all peer-checked:bg-[#3b82f6]">
                             </div>
                         </label>
                     </div>
@@ -45,17 +45,17 @@
             </div>
             <div class="flex-1 w-full mt-4 md:mt-0">
                 <label for="file-planobra"
-                    class="block border-2 border-dashed border-slate-800 bg-slate-900/50 rounded-2xl p-4 text-center cursor-pointer hover:bg-slate-800 transition-all">
+                    class="block border-2 border-dashed border-[#30363d] bg-[#0e1116] rounded-none p-4 text-center cursor-pointer hover:bg-[#21262d] transition-all">
                     <input type="file" id="file-planobra" class="hidden" accept=".xlsx, .xls, .csv"
                         onchange="handleFileRow('planobra')">
-                    <p id="name-planobra" class="text-sm font-black text-slate-400 uppercase tracking-widest">
+                    <p id="name-planobra" class="text-sm font-black text-[#8a8f98] uppercase tracking-widest">
                         Seleccionar CSV / XLSX</p>
-                    <p class="text-[10px] text-slate-500 mt-2 font-bold italic">Arrastra archivos aquí</p>
+                    <p class="text-[10px] text-[#8a8f98] mt-2 font-bold italic">Arrastra archivos aquí</p>
                 </label>
             </div>
             <div class="md:w-1/4 w-full mt-4 md:mt-0">
                 <button onclick="processRow('planobra')" id="btn-planobra"
-                    class="w-full ios-btn ios-btn-primary py-4 text-sm flex items-center justify-center gap-2 shadow-blue-900/40">
+                    class="w-full ios-btn ios-btn-primary py-4 text-sm flex items-center justify-center gap-2 shadow-[#1e3a8a]/40">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                             d="M13 10V3L4 14h7v7l9-11h-7z"></path>
@@ -70,14 +70,14 @@
             <div class="md:w-1/4">
                 <span class="text-[10px] uppercase font-bold text-orange-400 block mb-1">Detalle</span>
                 <h3 class="text-2xl font-bold text-slate-100">Plan CSV</h3>
-                <p class="text-xs text-slate-500 font-medium">Actualiza detalle</p>
+                <p class="text-xs text-[#8a8f98] font-medium">Actualiza detalle</p>
             </div>
             <div class="flex-1 w-full">
                 <label for="file-detalle"
-                    class="block border-2 border-dashed border-slate-800 rounded-2xl p-4 text-center cursor-pointer hover:bg-slate-900/50 transition-all">
+                    class="block border-2 border-dashed border-[#30363d] rounded-none p-4 text-center cursor-pointer hover:bg-[#0e1116] transition-all">
                     <input type="file" id="file-detalle" class="hidden" accept=".xlsx, .xls, .csv"
                         onchange="handleFileRow('detalle')">
-                    <p id="name-detalle" class="text-sm font-black text-slate-500">Seleccionar Detalle Plan (.csv,
+                    <p id="name-detalle" class="text-sm font-black text-[#8a8f98]">Seleccionar Detalle Plan (.csv,
                         .xlsx)</p>
                 </label>
             </div>
@@ -98,20 +98,20 @@
             <div class="md:w-1/4">
                 <span class="text-[10px] uppercase font-bold text-emerald-400 block mb-1">Presupuesto</span>
                 <h3 class="text-2xl font-bold text-slate-100">Cotización</h3>
-                <p class="text-xs text-slate-500 font-medium">Cruza costos</p>
+                <p class="text-xs text-[#8a8f98] font-medium">Cruza costos</p>
             </div>
             <div class="flex-1 w-full">
                 <label for="file-costo"
-                    class="block border-2 border-dashed border-slate-800 bg-slate-900/50 rounded-2xl p-4 text-center cursor-pointer hover:bg-slate-800 transition-all">
+                    class="block border-2 border-dashed border-[#30363d] bg-[#0e1116] rounded-none p-4 text-center cursor-pointer hover:bg-[#21262d] transition-all">
                     <input type="file" id="file-costo" class="hidden" accept=".xlsx, .xls, .csv"
                         onchange="handleFileRow('costo')">
-                    <p id="name-costo" class="text-sm font-black text-slate-500 uppercase tracking-widest">Seleccionar
+                    <p id="name-costo" class="text-sm font-black text-[#8a8f98] uppercase tracking-widest">Seleccionar
                         XLSX</p>
                 </label>
             </div>
             <div class="md:w-1/4 w-full">
                 <button onclick="processRow('costo')" id="btn-costo"
-                    class="w-full ios-btn bg-emerald-600 text-white shadow-lg shadow-emerald-900/40 py-4 text-sm flex items-center justify-center gap-2 hover:scale-105 active:scale-95 transition-all font-bold">
+                    class="w-full ios-btn bg-[#3fb950] text-white shadow-lg shadow-emerald-900/40 py-4 text-sm flex items-center justify-center gap-2 hover:scale-105 active:scale-95 transition-all font-bold">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                             d="M13 10V3L4 14h7v7l9-11h-7z"></path>
@@ -126,14 +126,14 @@
             <div class="md:w-1/4">
                 <span class="text-[10px] uppercase font-bold text-purple-400 block mb-1">Validación</span>
                 <h3 class="text-2xl font-bold text-slate-100">PDT Cert</h3>
-                <p class="text-xs text-slate-500 font-medium">Valida certificaciones</p>
+                <p class="text-xs text-[#8a8f98] font-medium">Valida certificaciones</p>
             </div>
             <div class="flex-1 w-full">
                 <label for="file-cert"
-                    class="block border-2 border-dashed border-slate-800 bg-slate-900/50 rounded-2xl p-4 text-center cursor-pointer hover:bg-slate-800 transition-all">
+                    class="block border-2 border-dashed border-[#30363d] bg-[#0e1116] rounded-none p-4 text-center cursor-pointer hover:bg-[#21262d] transition-all">
                     <input type="file" id="file-cert" class="hidden" accept=".xlsx, .xls, .csv"
                         onchange="handleFileRow('cert')">
-                    <p id="name-cert" class="text-sm font-black text-slate-500 uppercase tracking-widest">Seleccionar
+                    <p id="name-cert" class="text-sm font-black text-[#8a8f98] uppercase tracking-widest">Seleccionar
                         XLSX</p>
                 </label>
             </div>
@@ -154,7 +154,7 @@
             <div class="md:w-1/4">
                 <span class="text-[10px] uppercase font-bold text-indigo-400 block mb-1">Personalización</span>
                 <h3 class="text-2xl font-bold text-slate-100 uppercase tracking-tighter">Datos Manuales</h3>
-                <p class="text-xs text-slate-500 font-medium mb-3">Actualiza por ITEMPLAN</p>
+                <p class="text-xs text-[#8a8f98] font-medium mb-3">Actualiza por ITEMPLAN</p>
                 <a href="/api/config/manual-columns/template" class="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 underline underline-offset-4 flex items-center gap-1 w-fit transition-colors">
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                     Descargar Plantilla
@@ -162,17 +162,17 @@
             </div>
             <div class="flex-1 w-full">
                 <label for="file-manual"
-                    class="block border-2 border-dashed border-indigo-500/20 bg-indigo-900/20 rounded-2xl p-4 text-center cursor-pointer hover:bg-indigo-900/40 transition-all">
+                    class="block border-2 border-dashed border-indigo-500/20 bg-indigo-900/20 rounded-none p-4 text-center cursor-pointer hover:bg-indigo-900/40 transition-all">
                     <input type="file" id="file-manual" class="hidden" accept=".xlsx, .xls, .csv"
                         onchange="handleFileRow('manual')">
-                    <p id="name-manual" class="text-sm font-black text-slate-500 uppercase tracking-widest leading-relaxed">
+                    <p id="name-manual" class="text-sm font-black text-[#8a8f98] uppercase tracking-widest leading-relaxed">
                         Seleccionar Archivo Manual<br><span class="text-[9px] lowercase font-normal opacity-60">(Respeta vacíos)</span>
                     </p>
                 </label>
             </div>
             <div class="md:w-1/4 w-full">
                 <button onclick="processRow('manual')" id="btn-manual"
-                    class="w-full ios-btn bg-indigo-600 text-white shadow-lg shadow-indigo-900/40 py-4 text-sm flex items-center justify-center gap-2 hover:scale-105 active:scale-95 transition-all font-bold">
+                    class="w-full ios-btn bg-[#3b82f6] text-white shadow-lg shadow-indigo-900/40 py-4 text-sm flex items-center justify-center gap-2 hover:scale-105 active:scale-95 transition-all font-bold">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                     </svg>
@@ -184,9 +184,9 @@
 
     <!-- Single Results Modal -->
     <div id="resultsModal"
-        class="hidden fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-[200] p-4">
+        class="hidden fixed inset-0 bg-black/40  flex items-center justify-center z-[200] p-4">
         <div class="ios-card p-10 max-w-sm w-full text-center shadow-2xl relative">
-            <div id="resIcon" class="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6"></div>
+            <div id="resIcon" class="w-24 h-24 rounded-none flex items-center justify-center mx-auto mb-6"></div>
             <h3 id="resTitle" class="text-3xl font-black mb-2 text-slate-800"></h3>
             <div class="space-y-3 mb-10 mt-6" id="resDetails"></div>
             <div class="flex flex-col gap-3">
@@ -228,8 +228,8 @@
             files[type] = input.files[0];
             const nameEl = document.getElementById(`name-${type}`);
             nameEl.innerText = files[type].name;
-            nameEl.classList.remove('text-slate-400');
-            nameEl.classList.add('text-blue-600', 'font-black');
+            nameEl.classList.remove('text-[#8a8f98]');
+            nameEl.classList.add('text-[#3b82f6]', 'font-black');
 
             // Efecto visual de éxito al seleccionar
             nameEl.parentElement.classList.add('border-blue-400', 'bg-blue-50/30');
