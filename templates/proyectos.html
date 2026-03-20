@@ -59,7 +59,10 @@
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-base font-black text-white tracking-tight">Consolidado</h1>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-base font-black text-white tracking-tight">Consolidado</h1>
+                        <span id="totalItems" class="text-[10px] font-black text-[#60a5fa] bg-[#21262d] border border-[#30363d] px-1.5 py-0.5 rounded-none shadow-sm hidden">0</span>
+                    </div>
                     <p class="text-[9px] font-bold text-[#8a8f98] uppercase tracking-widest leading-none mt-0.5">Gestión
                         Centralizada Proyectos</p>
                 </div>
@@ -999,6 +1002,12 @@
                     $('.dataTables_paginate .paginate_button').addClass('!bg-transparent !border-transparent !text-[#8a8f98] !px-1.5 !py-0.5 !rounded !text-[9px] hover:!bg-[#30363d] hover:!text-white font-bold transition-colors');
                     $('.dataTables_paginate .paginate_button.current').addClass('!bg-[#30363d] !text-white !border-[#30363d]');
                     $('.dataTables_length select').addClass('bg-transparent border border-[#30363d] text-[#8a8f98] text-[9px] rounded px-1.5 py-0.5 hover:border-[#60a5fa] outline-none transition-colors');
+                    
+                    // Actualizar el total de items (filtrado)
+                    const api = this.api();
+                    const total = api.rows({ filter: 'applied' }).count();
+                    const totalItemsSpan = $('#totalItems');
+                    totalItemsSpan.text(total.toLocaleString()).removeClass('hidden');
                 },
                 initComplete: function () {
                     const api = this.api();

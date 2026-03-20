@@ -220,6 +220,35 @@
         manual: 'manual_update'
     };
 
+    // Cargar configuración inicial
+    async function loadGlobalConfig() {
+        try {
+            const res = await fetch('/api/config/global');
+            const config = await res.json();
+            if (config.import_filter_active !== undefined) {
+                document.getElementById('filter-active').checked = config.import_filter_active === 'true';
+            }
+        } catch (e) {
+            console.error("Error cargando config global:", e);
+        }
+    }
+
+    // Guardar configuración al cambiar toggle
+    document.getElementById('filter-active').addEventListener('change', async (e) => {
+        try {
+            await fetch('/api/config/global', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ import_filter_active: e.target.checked })
+            });
+            console.log("Configuración de filtrado guardada:", e.target.checked);
+        } catch (err) {
+            console.error("Error guardando config:", err);
+        }
+    });
+
+    loadGlobalConfig();
+
     function handleFileRow(type) {
         const input = document.getElementById(`file-${type}`);
         console.log(`Archivo seleccionado para ${type}:`, input.files[0]?.name);

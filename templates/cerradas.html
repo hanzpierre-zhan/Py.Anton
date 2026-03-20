@@ -1,0 +1,1743 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex h-[calc(100vh-45px)] bg-[#0e1116] overflow-hidden">
+    <!-- Sidebar de Filtros Maestros -->
+    <aside id="masterSidebar"
+        class="w-52 bg-[#181b21] border-r border-[#30363d] flex-shrink-0 flex flex-col relative transition-all duration-300 shadow-xl">
+        <div class="p-4 border-b border-[#30363d] flex items-center justify-between bg-[#181b21] sticky top-0 z-10">
+            <div>
+                <h2 class="text-3xl font-black tracking-tight text-white uppercase italic">Cerradas</h2>
+                <p class="text-xs text-[#8a8f98] font-bold uppercase tracking-widest mt-1">Historial 2026+ <span
+                        id="virtualFilterCount"
+                        class="ml-1 px-1 py-0.5 bg-[#21262d] rounded-none text-[#60a5fa]">0</span></p>
+            </div>
+            <div class="flex items-center gap-1">
+                <button onclick="toggleSidebar()"
+                    class="p-2 hover:bg-[#21262d] rounded-none text-[#8a8f98] transition-all" title="Contraer panel">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div id="sidebarFilters" class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar scroll-smooth">
+            <!-- Los filtros virtuales se cargarán aquí dinámicamente -->
+            <div class="animate-pulse space-y-4">
+                <div class="h-4 bg-[#21262d] rounded w-1/2"></div>
+                <div class="h-10 bg-[#30363d] rounded-none"></div>
+            </div>
+        </div>
+
+        <!-- Resizer Handle -->
+        <div id="sidebarResizer"
+            class="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-400/30 transition-colors z-20">
+        </div>
+    </aside>
+
+    <!-- Contenido Principal -->
+    <main class="flex-1 flex flex-col min-w-0 bg-[#0e1116]">
+        <!-- Barra de Herramientas -->
+        <header
+            class="h-14 border-b border-[#30363d] flex items-center justify-between px-4 bg-[#181b21] z-10 shrink-0">
+            <div class="flex items-center gap-4">
+                <button id="btnOpenSidebar" onclick="toggleSidebar()"
+                    class="hidden p-2 hover:bg-[#21262d] rounded-none text-[#8a8f98] transition-all mr-2"
+                    title="Desplegar Filtros">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
+                    </svg>
+                </button>
+                <div
+                    class="w-8 h-8 rounded-none bg-[#3b82f6] flex items-center justify-center text-white shadow-lg shadow-[#1e3a8a]/40">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
+                        </path>
+                    </svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-base font-black text-white tracking-tight">Consolidado</h1>
+                        <span id="totalItems" class="text-[10px] font-black text-[#60a5fa] bg-[#21262d] border border-[#30363d] px-1.5 py-0.5 rounded-none shadow-sm hidden">0</span>
+                    </div>
+                    <p class="text-[9px] font-bold text-[#8a8f98] uppercase tracking-widest leading-none mt-0.5">Gestión
+                        Centralizada Proyectos</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button onclick="exportToExcel()"
+                    class="flex items-center gap-1.5 px-3 py-1.5 bg-[#3fb950] text-white rounded-none text-[10px] font-black hover:bg-[#2ea043] transition-all shadow-lg shadow-emerald-500/10 group">
+                    <svg class="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    EXCEL
+                </button>
+                {% if current_user and current_user.rol in ['Admin', 'Administrador'] %}
+                <div class="h-8 w-px bg-[#21262d] mx-1"></div>
+
+                <button onclick="toggleManualColumnsModal()"
+                    class="p-2.5 hover:bg-[#21262d] text-[#8a8f98] hover:text-[#60a5fa] rounded-none transition-all border border-transparent hover:border-[#30363d] group"
+                    title="Añadir Columna Manual">
+                    <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                </button>
+                {% endif %}
+
+                {% if current_user and current_user.rol in ['Admin', 'Administrador', 'Editor'] %}
+                <button onclick="toggleOrderModal()"
+                    class="p-2.5 hover:bg-[#21262d] text-[#8a8f98] hover:text-[#60a5fa] rounded-none transition-all border border-transparent hover:border-[#30363d]"
+                    title="Reordenar Columnas">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h7"></path>
+                    </svg>
+                </button>
+
+                <button onclick="toggleColumnModal()"
+                    class="p-2.5 hover:bg-[#21262d] text-[#8a8f98] hover:text-[#60a5fa] rounded-none transition-all border border-transparent hover:border-[#30363d]"
+                    title="Visibilidad / Tipos">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4">
+                        </path>
+                    </svg>
+                </button>
+                {% endif %}
+
+                {% if current_user and current_user.rol in ['Admin', 'Administrador'] %}
+                <div class="h-8 w-px bg-[#21262d] mx-1"></div>
+
+                <button onclick="confirmConsolidar()"
+                    class="p-2.5 hover:bg-[#3b82f6]/10 text-[#3b82f6] hover:text-[#60a5fa] rounded-none transition-all border border-transparent hover:border-[#3b82f6]/20"
+                    title="Consolidar (Eliminar Cerradas < 2026)">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                        </path>
+                    </svg>
+                </button>
+
+                <button onclick="confirmClear()"
+                    class="p-2.5 hover:bg-rose-500/10 text-rose-500 hover:text-rose-400 rounded-none transition-all border border-transparent hover:border-rose-500/20"
+                    title="Limpiar Base de Datos">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                        </path>
+                    </svg>
+                </button>
+                {% endif %}
+            </div>
+
+        </header>
+
+        <!-- Tabla -->
+        <div id="tableWrapper" class="flex-1 p-0 bg-[#0e1116] flex flex-col overflow-hidden pb-0">
+            <div class="flex-1 flex flex-col overflow-hidden bg-[#181b21]">
+                <div class="flex-1 relative overflow-auto ios-scrollbar bg-[#181b21]">
+                    <table id="projectsTable" class="w-full border-collapse">
+                        <thead id="tableHead" class="bg-[#21262d]">
+                            <!-- JS populated -->
+                        </thead>
+                        <tbody class="divide-y divide-[#30363d]">
+                            <!-- JS populated -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination and Controls Footer -->
+        <footer class="h-9 border-t border-[#30363d] flex items-center justify-between px-4 bg-[#181b21] z-10 shrink-0">
+            <div class="flex items-center">
+                <div id="bottomLength"></div>
+            </div>
+            <div class="flex items-center justify-end">
+                <div id="bottomPagination" class="flex items-center gap-1"></div>
+            </div>
+        </footer>
+    </main>
+</div>
+
+<!-- Contenedores de Modales (Lado Derecho) -->
+<div id="modalContainer" class="fixed inset-0 z-[200] pointer-events-none">
+
+    <!-- Modal Columnas -->
+    <div id="columnModal"
+        class="absolute inset-0 bg-[#0e1116]/40 backdrop-blur-sm justify-end hidden pointer-events-auto p-4 transition-all overflow-hidden">
+        <div
+            class="bg-[#21262d] w-full max-w-sm h-full rounded-none shadow-2xl flex flex-col overflow-hidden animate-slide-left border-l border-[#30363d]">
+            <div class="p-8 border-b border-[#30363d] flex items-center justify-between bg-[#21262d] shrink-0">
+                <div>
+                    <h3 class="text-xl font-black text-slate-50">Columnas</h3>
+                    <p class="text-[10px] font-bold text-[#8a8f98] uppercase tracking-widest mt-1">Configuración Vista
+                    </p>
+                </div>
+                <button onclick="toggleColumnModal()"
+                    class="p-2 hover:bg-[#f0f6fc] rounded-none text-[#c9d1d9] hover:text-[#c9d1d9] transition-all">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6 bg-[#0e1116] flex gap-2 shrink-0">
+                <button onclick="toggleAllColumns(true)"
+                    class="flex-1 py-3 bg-[#21262d] border border-[#30363d] rounded-none text-[10px] font-black uppercase text-[#c9d1d9] hover:border-[#3b82f6] hover:text-[#60a5fa] transition-all">Mostrar
+                    Todo</button>
+                <button onclick="toggleAllColumns(false)"
+                    class="flex-1 py-3 bg-[#21262d] border border-[#30363d] rounded-none text-[10px] font-black uppercase text-[#c9d1d9] hover:border-rose-500 hover:text-rose-400 transition-all">Ocultar
+                    Todo</button>
+            </div>
+            <div id="columnList" class="flex-1 overflow-y-auto p-6 space-y-2 ios-scrollbar"></div>
+        </div>
+    </div>
+
+    <!-- Modal Reordenar -->
+    <div id="orderModal"
+        class="absolute inset-0 bg-[#0e1116]/40 backdrop-blur-sm flex justify-end hidden pointer-events-auto p-4 transition-all overflow-hidden">
+        <div
+            class="bg-[#21262d] w-full max-w-sm h-full rounded-none shadow-2xl flex flex-col overflow-hidden animate-slide-left border-l border-[#30363d]">
+            <div class="p-8 border-b border-[#30363d] flex items-center justify-between bg-[#21262d] shrink-0">
+                <div>
+                    <h3 class="text-xl font-bold text-white">Reordenar</h3>
+                    <p class="text-[10px] font-bold text-[#8a8f98] uppercase tracking-widest mt-1">Arrastrar para
+                        ordenar</p>
+                </div>
+                <button onclick="toggleOrderModal()"
+                    class="p-2 hover:bg-[#30363d] rounded-none text-[#8a8f98] hover:text-white transition-all">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="sortableColumnList" class="flex-1 overflow-y-auto p-8 space-y-2 ios-scrollbar text-[#c9d1d9]">
+            </div>
+            <div class="p-8 border-t border-[#30363d] bg-[#181b21] shrink-0">
+                <button onclick="applyNewOrder()"
+                    class="w-full py-4 bg-[#3b82f6] text-white rounded-none text-sm font-black hover:bg-blue-700 hover:scale-[1.02] transition-all shadow-xl shadow-[#1e3a8a]/20">Aplicar
+                    Nuevo Orden</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Columnas Manuales -->
+    <div id="manualColumnsModal"
+        class="absolute inset-0 bg-[#0e1116]/40 backdrop-blur-sm flex justify-end hidden pointer-events-auto p-4 transition-all overflow-hidden">
+        <div
+            class="bg-[#21262d] w-full max-w-sm h-full rounded-none shadow-2xl flex flex-col overflow-hidden animate-slide-left border-l border-[#30363d]">
+            <div class="p-8 border-b border-[#30363d] flex items-center justify-between bg-[#21262d] shrink-0">
+                <div>
+                    <h3 class="text-xl font-black text-white">Columnas Manuales</h3>
+                    <p class="text-[10px] font-bold text-[#8a8f98] uppercase tracking-widest mt-1">Crear / Gestionar</p>
+                </div>
+                <button onclick="toggleManualColumnsModal()"
+                    class="p-2 hover:bg-[#30363d] rounded-none text-[#8a8f98] hover:text-white transition-all">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6 space-y-4 flex-1 overflow-y-auto ios-scrollbar">
+                <div class="bg-[#0e1116] p-5 rounded-none border border-[#30363d] space-y-4">
+                    <div class="space-y-3">
+                        <input type="text" id="manualColName" placeholder="Nombre (ej: BITACORA)"
+                            class="ios-input !py-2.5 !bg-[#21262d] text-xs border-[#30363d] text-white">
+                        <select id="manualColType" onchange="toggleManualOptions()"
+                            class="ios-input !py-2.5 !bg-[#21262d] text-xs border-[#30363d] text-white">
+                            <option value="texto">Texto Corto</option>
+                            <option value="texto_largo">Texto Largo (Bitácora)</option>
+                            <option value="lista">Lista / Opciones</option>
+                            <option value="fecha">Fecha</option>
+                        </select>
+                    </div>
+                    <div id="manualOptionsContainer" class="hidden">
+                        <textarea id="manualColOptions"
+                            placeholder="Escribe las opciones separadas por punto y coma (;). Ejemplo: Opción A; Opción B; Opción C"
+                            class="ios-input !py-2.5 !bg-[#21262d] text-xs text-white border-[#30363d] min-h-[100px] resize-none focus:ring-2 focus:ring-[#3b82f6]/20"></textarea>
+                        <p class="text-[9px] text-[#8a8f98] mt-1 italic font-bold">Usa ";" para separar las opciones si
+                            alguna contiene comas.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="btnCreateManual" onclick="saveManualColumn()"
+                            class="flex-1 py-3 bg-[#3b82f6] hover:bg-[#2563eb] text-white font-black text-[10px] rounded-none shadow-lg shadow-[#1e3a8a]/20 transition-all uppercase tracking-widest">
+                            CREAR COLUMNA
+                        </button>
+                        <button id="btnCancelEditManual" onclick="resetManualForm()"
+                            class="hidden px-4 py-3 bg-[#30363d] hover:bg-slate-600 text-[#c9d1d9] font-black text-[10px] rounded-none transition-all uppercase tracking-widest">
+                            X
+                        </button>
+                    </div>
+                </div>
+                <div id="manualColumnsList" class="space-y-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Formulario Lateral (Llenado Manual) -->
+    <div id="lateralFormModal"
+        class="absolute inset-0 bg-[#0e1116]/40 backdrop-blur-sm flex justify-end hidden pointer-events-auto p-4 transition-all overflow-hidden z-[201]">
+        <div
+            class="bg-[#21262d] w-full max-w-md h-full rounded-none shadow-2xl flex flex-col overflow-hidden animate-slide-left border-l border-[#30363d]">
+            <div class="p-8 border-b border-[#30363d] flex items-center justify-between bg-[#21262d] shrink-0">
+                <div>
+                    <h3 class="text-xl font-black text-white">Estatus de la obra</h3>
+                    <p class="text-[10px] font-bold text-[#8a8f98] uppercase tracking-widest mt-1" id="lateralFormSubtitle">Llenado Manual</p>
+                </div>
+                <button onclick="toggleLateralFormModal()"
+                    class="p-2 hover:bg-[#30363d] rounded-none text-[#8a8f98] hover:text-white transition-all">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="lateralFormInputContainer" class="flex-1 overflow-y-auto p-8 space-y-6 ios-scrollbar">
+                <!-- Generado por JS -->
+            </div>
+            <div class="p-6 border-t border-[#30363d] bg-[#181b21] shrink-0">
+                <button onclick="saveLateralForm()" id="btnSaveLateralForm"
+                    class="w-full py-4 bg-[#3b82f6] text-white rounded-none text-sm font-black hover:bg-blue-700 hover:scale-[1.02] transition-all shadow-xl shadow-[#1e3a8a]/20">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Confirmar Limpieza -->
+    <div id="clearModal"
+        class="absolute inset-0 bg-[#0e1116]/80  flex justify-end hidden pointer-events-auto p-4 transition-all overflow-hidden">
+        <div
+            class="bg-[#21262d] w-full max-w-sm h-full rounded-none shadow-2xl flex flex-col overflow-hidden animate-slide-left border-l border-[#30363d]">
+            <div class="p-8 border-b border-[#30363d] flex items-center justify-between bg-[#21262d] shrink-0">
+                <h3 class="text-xl font-black text-white">Limpieza</h3>
+                <button onclick="$('#clearModal').addClass('hidden').removeClass('flex')"
+                    class="p-2 hover:bg-[#30363d] rounded-none text-[#8a8f98] hover:text-white transition-all">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-10 flex-1 flex flex-col items-center justify-center text-center space-y-6">
+                <div
+                    class="w-24 h-24 bg-rose-500/10 text-rose-500 rounded-full flex items-center justify-center animate-bounce">
+                    <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                        </path>
+                    </svg>
+                </div>
+                <div>
+                    <h4 class="text-2xl font-black text-white">¿Estás seguro?</h4>
+                    <p class="text-sm text-[#8a8f98] font-medium mt-2 px-4">Esta acción eliminará todos los proyectos de
+                        forma permanente.</p>
+                </div>
+                <div class="w-full space-y-3 pt-6">
+                    <button onclick="executeClear()"
+                        class="w-full py-4 bg-rose-500 text-white rounded-none font-black text-sm shadow-xl shadow-rose-900/20 hover:bg-rose-600 transition-all">Eliminar
+                        todo ahora</button>
+                    <button onclick="$('#clearModal').addClass('hidden').removeClass('flex')"
+                        class="w-full py-4 text-[#8a8f98] font-bold text-sm">Mantener datos</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Bitácora / Edición Manual (Alineado con Py.Anton) -->
+    <div id="editManualModal" class="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center hidden p-4 pointer-events-auto">
+        <div class="bg-[#181b21] w-full max-w-2xl rounded-none shadow-2xl overflow-hidden border border-[#30363d] animate-pop flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b border-[#30363d] flex items-center justify-between">
+                <div>
+                    <h3 id="editManualTitle" class="text-xl font-black text-white tracking-tight">Editar Campo</h3>
+                    <p class="text-[10px] font-bold text-[#8a8f98] uppercase tracking-widest mt-1">Edición Manual</p>
+                </div>
+                <button onclick="toggleEditManualModal()" class="text-[#8a8f98] hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div id="editManualInputContainer" class="p-6 overflow-y-auto"></div>
+            <div class="p-6 bg-[#0d1117] border-t border-[#30363d]">
+                <button onclick="saveManualValue()" class="w-full py-4 bg-[#3b82f6] text-white rounded-none text-sm font-black hover:bg-[#2563eb] transition-all">
+                    Guardar Cambios
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style type="text/tailwindcss">
+    /* UI Refinements */
+    .status-badge {
+        padding: 0.15rem 0.6rem;
+        border-radius: 0;
+        font-size: 8px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: -0.01em;
+        display: inline-block;
+    }
+
+    .ios-modal-overlay {
+        @apply fixed inset-0 bg-[#0e1116]  z-[100] flex items-center justify-center p-4 transition-all;
+    }
+
+    .ios-modal-content {
+        @apply bg-[#181b21] w-full rounded-none shadow-2xl overflow-hidden animate-pop border border-[#30363d];
+    }
+
+    .ios-input {
+        @apply w-full bg-[#21262d] border border-[#30363d] rounded-none px-4 py-3 text-xs font-bold text-[#c9d1d9] outline-none focus:ring-2 focus:ring-[#3b82f6]/20 transition-all placeholder:text-[#8a8f98];
+    }
+
+    /* Global scrollbar for the page */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #0e1116;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #30363d;
+        border-radius: 0;
+        border: 2px solid #0e1116;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #4b5563;
+    }
+
+    .manual-indicator::after {
+        content: '✎';
+        position: relative;
+        top: -0.25rem;
+        right: -0.25rem;
+        font-size: 8px;
+        opacity: 0;
+        transition: opacity 0.2s;
+        color: #60a5fa;
+    }
+
+    .manual-indicator:hover::after {
+        @apply opacity-100;
+    }
+
+    /* DataTable Wrapper Layout removed, letting DataTables manage itself naturally */
+
+    /* --- Table Styles --- */
+    #projectsTable th {
+        background-color: #181b21 !important;
+        color: #ffffff !important;
+        /* Más claro para contrastar */
+        padding: 6px 10px !important;
+        font-size: 10px !important;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border: 1px solid #30363d !important;
+        white-space: nowrap;
+        cursor: default !important;
+        text-align: left !important;
+        box-sizing: border-box !important;
+    }
+
+    #projectsTable td {
+        padding: 1px 6px !important;
+        font-size: 10px !important;
+        line-height: normal !important;
+        vertical-align: middle !important;
+        color: #c9d1d9 !important;
+        border: 1px solid #30363d !important;
+        white-space: nowrap;
+        text-align: left !important;
+        box-sizing: border-box !important;
+    }
+
+    .filter-row th {
+        background: #181b21 !important;
+        padding: 4px 10px !important;
+        /* Sync padding */
+        border: 1px solid #30363d !important;
+        box-sizing: border-box !important;
+    }
+
+    .filter-input {
+        @apply w-full bg-[#21262d] border border-[#30363d] rounded-none px-2 py-1 text-[10px] font-medium text-[#c9d1d9] outline-none focus:ring-1 focus:ring-[#3b82f6] placeholder:text-[#8a8f98] text-left transition-colors hover:bg-[#30363d] focus:bg-[#181b21];
+        box-sizing: border-box;
+    }
+
+    /* Sticky Header for Native Table */
+    #projectsTable thead th {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+    }
+
+    .filter-row th {
+        top: 29px;
+        /* This offsets the filter row directly beneath the title row */
+        z-index: 49;
+    }
+
+    /* Sticky First and Second Columns */
+    .sticky-col-1 {
+        position: sticky !important;
+        left: 0 !important;
+        z-index: 40 !important;
+        background-color: #181b21 !important;
+        box-shadow: none !important;
+    }
+
+    .sticky-col-2 {
+        position: sticky !important;
+        left: 80px !important;
+        z-index: 40 !important;
+        background-color: #181b21 !important;
+        border-right: 2px solid #30363d !important;
+        box-shadow: none !important;
+    }
+
+    thead .sticky-col-1,
+    thead .sticky-col-2 {
+        z-index: 60 !important;
+    }
+
+    /* Animations */
+    @keyframes slide-left {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes pop {
+        from {
+            transform: scale(0.95);
+            opacity: 0;
+        }
+
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .animate-slide-left {
+        animation: slide-left 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .animate-pop {
+        animation: pop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .ios-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .ios-scrollbar::-webkit-scrollbar-thumb {
+        background: #e2e8f0;
+        border-radius: 10px;
+    }
+
+    /* Resizable Sidebar Styles */
+    #masterSidebar.collapsed {
+        width: 0 !important;
+        margin-right: 0 !important;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    #sidebarResizer {
+        transition: background-color 0.2s;
+    }
+
+    #sidebarResizer:active {
+        background-color: rgb(96 165 250 / 0.5) !important;
+        width: 4px !important;
+    }
+
+    /* Alarmist Styles */
+    @keyframes shiver {
+        0% {
+            transform: translate(0, 0);
+        }
+
+        25% {
+            transform: translate(-1px, 1px);
+        }
+
+        50% {
+            transform: translate(1px, -1px);
+        }
+
+        75% {
+            transform: translate(-1px, -1px);
+        }
+
+        100% {
+            transform: translate(0, 0);
+        }
+    }
+
+    .alarm-0-3 {
+        background-color: #ecfdf5;
+        color: #3fb950;
+        border: 1px solid #d1fae5;
+    }
+
+    .alarm-4-7 {
+        background-color: #eff6ff;
+        color: #2563eb;
+        border: 1px solid #dbeafe;
+    }
+
+    .alarm-8-11 {
+        background-color: #fefce8;
+        color: #a16207;
+        border: 1px solid #fef08a;
+    }
+
+    .alarm-12-15 {
+        background-color: #fff7ed;
+        color: #ea580c;
+        border: 1px solid #ffedd5;
+    }
+
+    .alarm-16-30 {
+        background-color: #f97316;
+        color: white;
+        font-weight: 900;
+        box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.1);
+    }
+
+    .alarm-31-60 {
+        background-color: #f43f5e;
+        color: white;
+        font-weight: 900;
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        box-shadow: 0 10px 15px -3px rgba(244, 63, 94, 0.2);
+    }
+
+    .alarm-61-90 {
+        background-color: #181b21;
+        color: white;
+        font-weight: 900;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .alarm-0-3 {
+        background: rgba(63, 185, 80, 0.15);
+        color: #34d399;
+        border: 1px solid rgba(63, 185, 80, 0.3);
+    }
+
+    .alarm-4-7 {
+        background: rgba(245, 158, 11, 0.15);
+        color: #fbbf24;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .alarm-8-11 {
+        background: rgba(249, 115, 22, 0.15);
+        color: #fb923c;
+        border: 1px solid rgba(249, 115, 22, 0.3);
+    }
+
+    .alarm-12-15 {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .alarm-16-30 {
+        background: rgba(220, 38, 38, 0.25);
+        color: #fca5a5;
+        border: 1px solid rgba(220, 38, 38, 0.4);
+    }
+
+    .alarm-31-60 {
+        background: rgba(185, 28, 28, 0.35);
+        color: #fecaca;
+        border: 1px solid rgba(185, 28, 28, 0.5);
+        animation: shiver 0.3s infinite;
+    }
+
+    .alarm-61-90 {
+        background: #4c1d95;
+        color: #ddd6fe;
+        border: 1px solid #1d4ed8;
+        box-shadow: 0 0 15px rgba(124, 58, 237, 0.3);
+        animation: shiver 0.2s infinite;
+    }
+
+    .alarm-90-plus {
+        background: #000;
+        color: #ef4444;
+        border: 2px solid #ef4444;
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+        font-size: 11px;
+        animation: shiver 0.1s infinite;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: .5;
+        }
+    }
+
+    /* Manual indicator */
+    .manual-indicator {
+        @apply border-b border-dashed border-[#3b82f6]/30;
+    }
+
+    /* Columnas visibility modal refinements */
+    #columnListContainer label {
+        @apply flex items-center gap-3 p-2 rounded-none hover:bg-[#21262d]/50 transition-colors border border-transparent hover:border-[#30363d]/50;
+    }
+
+    #columnListContainer input[type="checkbox"] {
+        @apply w-4 h-4 rounded border-[#30363d] bg-[#21262d] text-[#3b82f6] focus:ring-[#3b82f6] focus:ring-offset-slate-900;
+    }
+
+    /* Global Styles already migrated up */
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+    let table;
+    let rawData = [];
+    let currentKeys = [];
+    let manualFields = [];
+    let filterConfigs = {};
+    let currentEditing = { id: null, field: null };
+    let editingManualId = null;
+
+    const DESIRED_ORDER = [
+        "TIMING", "ITEMPLAN", "PROYECTO", "SUBPROYECTO", "INDICADOR", "NOMBRE PROYECTO", "FASE",
+        "EMPRESA ELECTRICA", "UIP", "COORDX", "COORDY", "ESTADO PLAN", "SUBESTADO TRUNCO",
+        "PO", "VALORIZ MANO DE OBRA", "VR",
+        "FECHA CREACION IP", "FECHA INICIO", "FECHA PREVISTA EJECUCION", "FECHA ADJUDICACION DISENO",
+        "FECHA EJECUCION DISENO", "FECHA TERMINO", "FECHA DE PRE LIQUIDACION", "CENTRAL",
+        "JEFATURA", "REGION", "ZONAL", "EMPRESA COLABORADA", "EMPRESA ADJUDICACION", "ADELANTO",
+        "MARCA PARALIZACION", "FECHA PARALIZACION", "MOTIVO PARALIZACION", "FECHA DESPARALIZACION",
+        "SIROPE", "CODIGO DE TRABAJO", "CODIGO MDF", "PAQUETIZADO", "DEPARTAMENTO", "PROVINCIA",
+        "DISTRITO", "CESTA", "ORDEN COMPRA", "NRO CERTIFICA CV", "POSICION", "SOLICITUD OC",
+        "ESTADO SOLICITUD OC", "FECHA REGISTRO SOLICITUD OC", "FECHA TRUNCO", "FECHA CANCELACION",
+        "ESTADO - PRESUP", "ESTADO", "SITUACION", "MODELO", "COMENTARIO EMERGENCIA CONOCIDA"
+    ];
+
+    async function loadData() {
+        try {
+            const [mfRes, mRes, pRes, fRes] = await Promise.all([
+                fetch('/api/config/manual-columns').then(r => r.json()),
+                fetch('/api/config/mapeos').then(r => r.json()),
+                fetch('/api/cerradas').then(r => r.json()),
+                fetch('/api/config/filtros').then(r => r.json())
+            ]);
+
+            manualFields = mfRes || [];
+            rawData = pRes || [];
+            const mapeos = mRes || [];
+
+            // Nueva estructura de filterConfigs: { col: {tipo: "...", virtual_cols: [...] } }
+            filterConfigs = fRes || {};
+
+            // Consolidar todas las columnas virtuales activas según los criterios que existan en la base
+            const vColsSet = new Set();
+            Object.values(filterConfigs).forEach(cfg => {
+                if (cfg.virtual_cols) cfg.virtual_cols.forEach(vc => vColsSet.add(vc));
+            });
+            const vCols = Array.from(vColsSet);
+
+            console.log("DEBUG: Roles:", window.userRole);
+            console.log("DEBUG: Manual Fields Loaded:", manualFields);
+            console.log("DEBUG: rawData sample:", rawData[0]);
+
+            // Mapeo de columnas virtuales
+            if (rawData.length > 0) {
+                rawData.forEach(row => {
+                    vCols.forEach(vc => {
+                        row[vc] = "";
+                        // Recorremos todos los mapeos para esta columna virtual
+                        mapeos.forEach(m => {
+                            const valCriterio = String(row[m.columna_criterio] || '').trim();
+                            if (valCriterio === String(m.valor_criterio).trim()) {
+                                // Verificar si este criterio permite esta columna virtual
+                                const cfg = filterConfigs[m.columna_criterio];
+                                const allowedCols = (cfg && cfg.virtual_cols) || [];
+
+                                if (allowedCols.includes(vc) && m.valores && m.valores[vc]) {
+                                    row[vc] = m.valores[vc];
+                                }
+                            }
+                        });
+                    });
+                });
+            }
+
+            console.log("DEBUG: Virtual Columns populated:", vCols);
+            if (rawData.length > 0) console.log("DEBUG: Sample row with VCols:", rawData[0]);
+
+            if ($.fn.DataTable.isDataTable('#projectsTable')) {
+                saveVisibilityPrefs();
+                table.destroy();
+                $('#tableHead').empty();
+                $('#projectsTable tbody').empty();
+            }
+
+            // Limpieza profunda de elementos huérfanos de paginación
+            $('#bottomPagination').empty();
+            $('#bottomLength').empty();
+            $('.dataTables_paginate').remove();
+            $('.dataTables_length').remove();
+
+            if (!rawData || rawData.length === 0) {
+                $('#tableWrapper').html('<div class="py-20 text-center text-slate-400 font-bold">Sin datos cargados</div>');
+                return;
+            }
+
+            const sidebarPanel = $('#sidebarFilters').empty();
+            $('#virtualFilterCount').text(vCols.length);
+
+            vCols.forEach(vc => {
+                const id = vc.replace(/\s+/g, '_');
+                sidebarPanel.append(`
+                <div class="mb-4">
+                    <label class="text-[9px] font-black uppercase text-slate-500 mb-2 block flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> ${vc}
+                    </label>
+                    <select id="sf-${id}" data-col="${vc}" class="sidebar-filter bg-slate-800 border-slate-700 text-slate-200 rounded-xl px-3 py-2 text-xs font-bold w-full outline-none focus:ring-2 focus:ring-blue-500/20">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+            `);
+
+                const selectEl = $('#sf-' + vc.replace(/\s+/g, '_'));
+                const unique = [...new Set(rawData.map(r => r[vc]))].filter(v => v).sort();
+                unique.forEach(val => {
+                    selectEl.append(`<option value="${val}" class="bg-slate-900">${val}</option>`);
+                });
+
+                selectEl.on('change', function () {
+                    const col = table.column(vc + ':name');
+                    const val = $.fn.dataTable.util.escapeRegex($(this).val());
+                    col.search(val ? '^' + val + '$' : '', true, false).draw();
+                });
+            });
+
+            // Comprehensive key collection: collect from all sources
+            const allPossibleKeys = new Set();
+
+            // 1. Keys from all rows in rawData
+            rawData.forEach(row => {
+                Object.keys(row).forEach(k => {
+                    if (!k.startsWith('__')) allPossibleKeys.add(k);
+                });
+            });
+
+            // 2. Keys from manualFields
+            manualFields.forEach(mf => allPossibleKeys.add(mf.nombre));
+
+            // 3. Keys from vCols
+            vCols.forEach(vc => allPossibleKeys.add(vc));
+
+            const keysArray = Array.from(allPossibleKeys);
+
+            // Intentar recuperar el orden guardado
+            const savedState = JSON.parse(localStorage.getItem('DataTables_projectsTable') || '{}');
+            const savedOrder = savedState.ColReorder || [];
+
+            if (savedOrder.length > 0 && savedOrder.length === currentKeys.length) {
+                // Si ya teníamos un orden y las columnas coinciden, no tocamos currentKeys drásticamente
+                // Pero si es la primera carga o rebuild, usamos DESIRED_ORDER
+            }
+
+            currentKeys = [
+                ...DESIRED_ORDER.filter(k => keysArray.includes(k)),
+                ...keysArray.filter(k => !DESIRED_ORDER.includes(k))
+            ];
+
+            // Si el usuario ya reordenó, respetamos ese orden mapeando los nombres
+            const persistentOrder = JSON.parse(localStorage.getItem('anton_col_order') || '[]');
+            if (persistentOrder.length > 0) {
+                const reordered = [];
+                persistentOrder.forEach(name => {
+                    if (keysArray.includes(name)) reordered.push(name);
+                });
+                keysArray.forEach(k => {
+                    if (!reordered.includes(k)) reordered.push(k);
+                });
+                currentKeys = reordered;
+            }
+
+            const longCols = JSON.parse(localStorage.getItem('anton_long_text_cols') || '[]');
+            let hTr = '<tr class="title-row">';
+            let fTr = '<tr class="filter-row">';
+            currentKeys.forEach(k => {
+                const isLong = longCols.includes(k.toUpperCase());
+                hTr += `<th class="whitespace-nowrap group/th relative pr-6 select-none" data-col-name="${k}">
+                            <div class="flex items-center justify-between gap-1 w-full">
+                                <span>${k}</span>
+                                <button onclick="event.stopPropagation(); toggleLongText('${k}', ${!isLong})" 
+                                        class="opacity-0 group-hover/th:opacity-100 hover:text-blue-400 focus:outline-none transition-opacity absolute right-1" 
+                                        title="${isLong ? 'Cambiar a texto corto' : 'Cambiar a texto largo'}">
+                                    <svg class="w-3.5 h-3.5 ${isLong ? 'text-blue-500 opacity-100' : 'text-slate-500'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </th>`;
+                fTr += `<th class="px-2 py-1 bg-[#1e293b]" data-filter-for="${k}"></th>`;
+            });
+            // Render: Filters (fTr) first, then Titles (hTr)
+            $('#tableHead').html(fTr + '</tr>' + hTr + '</tr>');
+
+            const savedVis = JSON.parse(localStorage.getItem('anton_col_visibility') || '{}');
+            table = $('#projectsTable').DataTable({
+                data: rawData,
+                stateSave: true,
+                colReorder: false,
+                stateSaveCallback: (s, d) => {
+                    localStorage.setItem('DataTables_projectsTable', JSON.stringify(d));
+                    saveVisibilityPrefs();
+                },
+                columns: currentKeys.map(k => ({
+                    data: k,
+                    name: k,
+                    defaultContent: "",
+                    visible: savedVis[k] !== undefined ? savedVis[k] : true,
+                    className: `px-2 py-0.5 text-[10px] text-slate-400 border-b border-slate-700/50 whitespace-nowrap ${currentKeys.indexOf(k) === 0 ? 'sticky-col-1' : (currentKeys.indexOf(k) === 1 ? 'sticky-col-2' : '')}`,
+                    render: (data, type, row) => {
+                        if (type !== 'display') return data || "";
+
+                        const safeData = data ? String(data).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;') : "";
+
+                        if (['PROYECTO', 'SUBPROYECTO', 'NOMBRE PROYECTO'].includes(k)) {
+                            if (!data) return "";
+                            const displayData = data.length > 40 ? data.substring(0, 40) + "..." : data;
+                            return `<div class="max-w-[250px] truncate cursor-pointer hover:text-blue-400 transition-colors" 
+                                         onclick="openLateralForm('${row.__db_id}')"
+                                         data-full="${safeData}" 
+                                         title="Haga clic para editar formulario">
+                                        ${displayData}
+                                    </div>`;
+                        }
+
+                        if (['ESTADO PLAN', 'ESTADO', 'SITUACION'].includes(k)) {
+                            const val = data || "";
+                            if (!val) return "";
+                            let color = 'bg-slate-800 text-slate-400 border border-slate-700';
+                            const status = String(val).toUpperCase();
+                            if (status.includes('CERTIFICADO')) color = 'bg-emerald-950/30 text-emerald-400 border border-emerald-500/30';
+                            if (status.includes('DISEÑO') || status.includes('INGENIERÍA')) color = 'bg-blue-950/30 text-blue-400 border border-blue-500/30';
+                            if (status.includes('OBRA') || status.includes('EJECUCIÓN')) color = 'bg-orange-950/30 text-orange-400 border border-orange-500/30';
+                            if (status.includes('PARALIZADO')) color = 'bg-rose-950/30 text-rose-400 border border-rose-500/30';
+                            return `<span class="status-badge ${color}">${val}</span>`;
+                        }
+                        if (k === 'TIMING') {
+                            if (data === null || data === undefined) return '';
+                            let days = parseInt(data);
+                            let cls = '';
+                            let icon = '';
+
+                            if (days <= 3) cls = 'alarm-0-3';
+                            else if (days <= 7) cls = 'alarm-4-7';
+                            else if (days <= 11) cls = 'alarm-8-11';
+                            else if (days <= 15) { cls = 'alarm-12-15'; icon = '⏳'; }
+                            else if (days <= 30) { cls = 'alarm-16-30'; icon = '⚠️'; }
+                            else if (days <= 60) { cls = 'alarm-31-60'; icon = '🚨'; }
+                            else if (days <= 90) { cls = 'alarm-61-90'; icon = '💣'; }
+                            else { cls = 'alarm-90-plus'; icon = '💀'; }
+
+                            return `<div class="status-badge ${cls} flex items-center gap-1">
+                                <span>${icon}</span>
+                                <span>${days} DIAS</span>
+                            </div>`;
+                        }
+                        const userRoleClean = String(window.userRole || "").trim().toUpperCase();
+                        const canEdit = userRoleClean.includes('ADMIN') || userRoleClean.includes('EDITOR');
+
+                        // Normalizar nombre de columna para comparar con manualFields
+                        const kUpper = String(k).trim().toUpperCase();
+                        const config = manualFields.find(mf => String(mf.nombre).trim().toUpperCase() === kUpper);
+                        const isManual = !!config;
+
+                        if (isManual) {
+                            if (!canEdit) return data || "";
+
+                            const safeData = data ? String(data).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;') : "";
+                            const displayData = safeData.length > 30 ? safeData.substring(0, 30) + "..." : (safeData || "Editar...");
+
+                            return `<div class="p-0.5 relative group/manual">
+                                <button onclick="openLateralForm('${row.__db_id}')" 
+                                        class="w-full min-w-[110px] bg-slate-800 border box-border border-blue-500/10 hover:border-blue-500/50 outline-none rounded px-2 py-1.5 text-[10px] text-left text-slate-300 transition-all shadow-sm flex items-center justify-between gap-1 overflow-hidden group-hover/manual:bg-slate-700" title="Editar formulario manual">
+                                    <span class="truncate">${displayData}</span>
+                                    <svg class="w-3 h-3 text-blue-400 shrink-0 opacity-40 group-hover/manual:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                </button>
+                            </div>`;
+                        }
+                        return data || "";
+                    }
+                })),
+                pageLength: 25,
+                autoWidth: false,
+                colReorder: true,
+                dom: 'lprt',
+                language: { emptyTable: "Sin datos", lengthMenu: "_MENU_", info: "_START_ - _END_ de _TOTAL_", paginate: { next: ">", previous: "<" } },
+                drawCallback: function () {
+                    $('.dataTables_paginate').addClass('flex items-center gap-0.5');
+                    $('.dataTables_paginate .paginate_button').addClass('!bg-transparent !border-transparent !text-[#8a8f98] !px-1.5 !py-0.5 !rounded !text-[9px] hover:!bg-[#30363d] hover:!text-white font-bold transition-colors');
+                    $('.dataTables_paginate .paginate_button.current').addClass('!bg-[#30363d] !text-white !border-[#30363d]');
+                    $('.dataTables_length select').addClass('bg-transparent border border-[#30363d] text-[#8a8f98] text-[9px] rounded px-1.5 py-0.5 hover:border-[#60a5fa] outline-none transition-colors');
+                    
+                    // Actualizar el total de items (filtrado)
+                    const api = this.api();
+                    const total = api.rows({ filter: 'applied' }).count();
+                    const totalItemsSpan = $('#totalItems');
+                    totalItemsSpan.text(total.toLocaleString()).removeClass('hidden');
+                },
+                initComplete: function () {
+                    const api = this.api();
+
+                    // Relocate pagination to bottom
+                    const pContainer = $('.dataTables_paginate').detach();
+                    const lContainer = $('.dataTables_length').detach();
+
+                    // Asegurarnos de limpiar cualquier control previo antes de agregar el nuevo
+                    $('#bottomPagination').empty().append(pContainer);
+                    $('#bottomLength').empty().append(lContainer);
+
+                    setTimeout(() => {
+                        api.columns.adjust().draw(false);
+                    }, 200);
+
+                    api.columns().every(function () {
+                        const column = this;
+                        const k = column.dataSrc();
+
+                        if (vCols.includes(k)) return;
+
+                        const filterTh = $(`#tableHead .filter-row th[data-filter-for="${k}"]`);
+                        if (!filterTh.length) return;
+
+                        const cfg = filterConfigs[k];
+                        const conf = (cfg && cfg.tipo) || 'search';
+
+                        if (conf === 'list') {
+                            const select = $(`<select class="w-full bg-slate-800 border border-slate-700 text-slate-200 text-[10px] py-1 px-2 rounded font-medium outline-none focus:ring-1 focus:ring-blue-500 hover:bg-slate-700 focus:bg-slate-900 transition-colors filter-input"><option value="">Todos</option></select>`)
+                                .appendTo(filterTh.empty())
+                                .on('change', function () {
+                                    const val = $.fn.dataTable.util.escapeRegex($(this).val());
+                                    column.search(val ? '^' + val + '$' : '', true, false).draw();
+                                });
+                            column.data().unique().sort().each(function (d) {
+                                if (d) select.append(`<option value="${d}" class="bg-slate-900">${d}</option>`);
+                            });
+                        } else if (k.includes('FECHA')) {
+                            $(`<input type="date" class="w-full bg-slate-800 border border-slate-700 text-slate-200 text-[10px] py-1 px-2 rounded font-medium outline-none focus:ring-1 focus:ring-blue-500 hover:bg-slate-700 focus:bg-slate-900 transition-colors filter-input">`)
+                                .appendTo(filterTh.empty())
+                                .on('change', function () { column.search(this.value).draw(); });
+                        } else {
+                            $(`<input type="text" placeholder="Filtrar..." class="w-full bg-slate-800 border border-slate-700 text-slate-200 text-[10px] py-1 px-2 rounded font-medium outline-none focus:ring-1 focus:ring-blue-500 placeholder:text-slate-500 hover:bg-slate-700 focus:bg-slate-900 transition-colors filter-input">`)
+                                .appendTo(filterTh.empty())
+                                .on('input', function () { column.search(this.value).draw(); });
+                        }
+                    });
+                    refreshColumnList();
+                }
+            });
+
+            $(document).on('input change', '.filter-input[type!="select-one"]', function () {
+                const name = $(this).data('col-name');
+                if (name) table.column(name + ':name').search(this.value).draw();
+            });
+
+        } catch (e) {
+            console.error("Critical error in loadData:", e);
+            $('#tableWrapper').html(`<div class="py-20 text-center text-rose-500 font-bold overflow-auto max-w-full">Error Crítico al cargar la tabla:<br><pre class="text-xs text-left inline-block mt-4 p-4 bg-slate-50 rounded">${e.message}</pre></div>`);
+        }
+    }
+
+    function applyMultiFilter(colName, selected) {
+        if (!table) return;
+        const col = table.column(colName + ':name');
+        if (!col || col.length === 0) return;
+        if (selected.length === 0) col.search('').draw();
+        else {
+            const regex = selected.map(v => '^' + $.fn.dataTable.util.escapeRegex(String(v)) + '$').join('|');
+            col.search(regex, true, false).draw();
+        }
+    }
+
+    function saveVisibilityPrefs() {
+        if (!table || !table.columns) return;
+        const prefs = JSON.parse(localStorage.getItem('anton_col_visibility') || '{}');
+        table.columns().every(function () {
+            const name = this.dataSrc();
+            if (typeof name === 'string' && !name.startsWith('__')) prefs[name] = this.visible();
+        });
+        localStorage.setItem('anton_col_visibility', JSON.stringify(prefs));
+    }
+
+    function refreshColumnList() {
+        if (!table || !table.columns) return;
+        const list = $('#columnList').empty();
+        const config = filterConfigs || {};
+        const longCols = JSON.parse(localStorage.getItem('anton_long_text_cols') || '[]');
+        
+        table.columns().every(function () {
+            const name = this.dataSrc();
+            if (typeof name !== 'string' || name.startsWith('__')) return;
+            const isVis = this.visible();
+            const configObj = config[name] || {};
+            const type = (configObj && configObj.tipo) ? configObj.tipo : 'search';
+            const isLong = longCols.includes(name.toUpperCase());
+
+            // Determinar estilo del select basado en el tipo actual
+            let selectColor = 'bg-slate-800 text-slate-300 border-slate-700';
+            if (type === 'list') selectColor = 'bg-blue-900/50 text-blue-300 border-blue-800';
+            if (type === 'date') selectColor = 'bg-emerald-900/50 text-emerald-300 border-emerald-800';
+
+            list.append(`
+                <div class="flex items-center justify-between p-2 rounded-none border border-slate-700 hover:bg-slate-800 transition-all gap-2">
+                    <label class="flex items-center gap-2 cursor-pointer flex-1 min-w-0">
+                        <input type="checkbox" ${isVis ? 'checked' : ''} onchange="toggleColumn(${this.index()}, this.checked)" class="rounded-none text-blue-600">
+                        <span class="text-[10px] font-bold text-slate-300 truncate" title="${name}">${name}</span>
+                    </label>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <select onchange="toggleLongText('${name}', this.value === 'long')" class="text-[8px] font-black uppercase rounded-none border outline-none cursor-pointer py-1 px-1 appearance-none text-center ${isLong ? 'bg-indigo-900/50 text-indigo-300 border-indigo-800' : 'bg-slate-800 text-slate-400 border-slate-700'} focus:ring-1 focus:ring-indigo-500 transition-colors shadow-sm w-[55px]" title="Formato de vista">
+                            <option class="bg-slate-900 text-slate-400" value="short" ${!isLong ? 'selected' : ''}>CORTO</option>
+                            <option class="bg-slate-900 text-indigo-300" value="long" ${isLong ? 'selected' : ''}>LARGO</option>
+                        </select>
+                        <select onchange="changeFilterType('${name}', this.value)" class="text-[8px] font-black uppercase rounded-none border outline-none cursor-pointer py-1 px-1 appearance-none text-center ${selectColor} focus:ring-1 focus:ring-blue-500 transition-colors shadow-sm w-[60px]" title="Tipo de filtro">
+                            <option class="bg-slate-900 text-slate-300" value="search" ${type === 'search' ? 'selected' : ''}>SEARCH</option>
+                            <option class="bg-slate-900 text-blue-300" value="list" ${type === 'list' ? 'selected' : ''}>LIST</option>
+                            <option class="bg-slate-900 text-emerald-300" value="date" ${type === 'date' ? 'selected' : ''}>DATE</option>
+                        </select>
+                    </div>
+                </div>
+            `);
+        });
+    }
+
+    async function toggleLongText(colName, makeLong) {
+        let longCols = JSON.parse(localStorage.getItem('anton_long_text_cols') || '[]');
+        const upper = colName.toUpperCase();
+        
+        if (makeLong && !longCols.includes(upper)) {
+            longCols.push(upper);
+        } else if (!makeLong && longCols.includes(upper)) {
+            longCols = longCols.filter(c => c !== upper);
+        }
+        
+        localStorage.setItem('anton_long_text_cols', JSON.stringify(longCols));
+        
+        if (table) {
+            table.rows().invalidate('data').draw(false);
+        }
+        refreshColumnList();
+    }
+
+    async function changeFilterType(colName, next) {
+        saveVisibilityPrefs(); // Guarda la visibilidad actual antes de recargar
+        const isModalOpen = !$('#columnModal').hasClass('hidden');
+
+        await fetch('/api/config/filtros', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ columna: colName, tipo: next })
+        });
+
+        await loadData();
+
+        if (isModalOpen) {
+            closeAllModals();
+            refreshColumnList();
+            $('#columnModal').removeClass('hidden').addClass('flex');
+        }
+    }
+
+    function toggleColumn(idx, vis) { if (table) { table.column(idx).visible(vis); saveVisibilityPrefs(); } }
+    function toggleAllColumns(vis) { if (table) { table.columns().visible(vis); $('#columnList input').prop('checked', vis); saveVisibilityPrefs(); } }
+    function closeAllModals() {
+        $('#modalContainer > div').addClass('hidden').removeClass('flex');
+        $('#editManualModal').addClass('hidden').removeClass('flex');
+        $('#lateralFormModal').addClass('hidden').removeClass('flex');
+    }
+
+    function toggleColumnModal() {
+        const isHidden = $('#columnModal').hasClass('hidden');
+        closeAllModals();
+        if (isHidden) {
+            refreshColumnList();
+            $('#columnModal').removeClass('hidden').addClass('flex');
+        }
+    }
+
+
+
+    function toggleOrderModal() {
+        if (!table || !table.colReorder) {
+            console.error("ColReorder no está disponible");
+            return;
+        }
+        const isHidden = $('#orderModal').hasClass('hidden');
+        closeAllModals();
+        if (isHidden) {
+            refreshOrderModal();
+            $('#orderModal').removeClass('hidden').addClass('flex');
+        }
+    }
+
+    function toggleManualColumnsModal() {
+        const isHidden = $('#manualColumnsModal').hasClass('hidden');
+        closeAllModals();
+        if (isHidden) {
+            refreshManualColumnsList();
+            $('#manualColumnsModal').removeClass('hidden').addClass('flex');
+        }
+    }
+
+    function toggleEditManualModal() {
+        const isHidden = $('#editManualModal').hasClass('hidden');
+        closeAllModals();
+        if (isHidden) {
+            $('#editManualModal').removeClass('hidden').addClass('flex');
+        }
+    }
+
+    function refreshOrderModal() {
+        if (!table || !table.colReorder) return;
+        const list = $('#sortableColumnList').empty();
+        const order = table.colReorder.order();
+        order.forEach(idx => {
+            const col = table.column(idx);
+            const name = col.dataSrc();
+            if (typeof name === 'string' && !name.startsWith('__')) {
+                if (col.visible()) {
+                    list.append(`<div class="p-3 bg-slate-700 border border-slate-600 rounded-none cursor-move text-slate-200" data-idx="${idx}">${name}</div>`);
+                }
+            }
+        });
+        new Sortable(list[0], { animation: 150 });
+    }
+
+    function applyNewOrder() {
+        if (!table || !table.colReorder) return;
+
+        const allCurrentOrder = table.colReorder.order();
+        const visibleOriginals = [];
+        $('#sortableColumnList > div').each(function () {
+            visibleOriginals.push(parseInt($(this).data('idx')));
+        });
+
+        const finalOrder = [];
+        let visPointer = 0;
+
+        allCurrentOrder.forEach(origIdx => {
+            if (table.column(origIdx).visible()) {
+                finalOrder.push(visibleOriginals[visPointer]);
+                visPointer++;
+            } else {
+                finalOrder.push(origIdx);
+            }
+        });
+
+        table.colReorder.order(finalOrder, true);
+
+        // Guardar el nombre de las columnas en el nuevo orden para persistencia real
+        const newKeysOrder = table.columns().indexes().map(idx => table.column(idx).dataSrc()).toArray();
+        localStorage.setItem('anton_col_order', JSON.stringify(newKeysOrder));
+
+        saveVisibilityPrefs();
+        closeAllModals();
+    }
+
+    async function updateInlineValue(element, id, field, value) {
+        try {
+            const rowIndex = rawData.findIndex(r => r.__db_id == id);
+            if (rowIndex === -1) return;
+            if (rawData[rowIndex][field] === value) return;
+
+            // Actualización optimista
+            rawData[rowIndex][field] = value;
+
+            // Petición al backend
+            const res = await fetch('/api/proyectos/update-field', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, field, value })
+            });
+
+            if (res.ok) {
+                // Actualizar el caché de DataTables para esta celda
+                if (table) {
+                    const cell = table.cell(element.closest('td'));
+                    if (cell.any()) {
+                        cell.data(value).invalidate('data');
+                    }
+                }
+
+                // Feedback visual de guardado exitoso
+                $(element).removeClass('border-slate-700 focus:border-blue-500').addClass('border-emerald-500 bg-emerald-900/10 focus:border-emerald-500');
+                setTimeout(() => {
+                    $(element).removeClass('border-emerald-500 bg-emerald-900/10 focus:border-emerald-500').addClass('border-slate-700 focus:border-blue-500');
+                }, 1000);
+            } else {
+                $(element).addClass('border-rose-500');
+            }
+        } catch (e) {
+            console.error("Error en edición inline:", e);
+            $(element).addClass('border-rose-500');
+        }
+    }
+
+    async function refreshManualColumnsList() {
+        const res = await fetch('/api/config/manual-columns');
+        manualFields = await res.json();
+        const list = $('#manualColumnsList').empty();
+        manualFields.forEach(f => {
+            list.append(`
+                <div class="flex items-center justify-between p-3 bg-slate-800 border border-slate-700 rounded-none shadow-sm group hover:border-blue-500/30 transition-all">
+                    <div>
+                        <p class="text-xs font-black text-white uppercase tracking-tight">${f.nombre}</p>
+                        <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">${f.tipo}</p>
+                    </div>
+                    <div class="flex gap-1">
+                        <button onclick="editManualColumn(${f.id})" class="text-slate-600 hover:text-blue-400 transition-colors p-1.5" title="Editar Configuración">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        </button>
+                        <button onclick="deleteManualColumn(${f.id})" class="text-slate-600 hover:text-rose-400 transition-colors p-1.5" title="Eliminar">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            `);
+        });
+    }
+
+    function editManualColumn(id) {
+        const f = manualFields.find(x => x.id == id);
+        if (!f) return;
+        editingManualId = id;
+        $('#manualColName').val(f.nombre);
+        $('#manualColType').val(f.tipo);
+        $('#manualColOptions').val(f.opciones);
+        toggleManualOptions();
+        $('#btnCreateManual').text('ACTUALIZAR').addClass('bg-emerald-600 hover:bg-emerald-500').removeClass('bg-blue-600 hover:bg-blue-500');
+        $('#btnCancelEditManual').removeClass('hidden');
+    }
+
+    function resetManualForm() {
+        editingManualId = null;
+        $('#manualColName').val('');
+        $('#manualColType').val('texto');
+        $('#manualColOptions').val('');
+        toggleManualOptions();
+        $('#btnCreateManual').text('CREAR COLUMNA').addClass('bg-blue-600 hover:bg-blue-500').removeClass('bg-emerald-600 hover:bg-emerald-500');
+        $('#btnCancelEditManual').addClass('hidden');
+    }
+
+    async function saveManualColumn() {
+        const nombre = $('#manualColName').val();
+        const tipo = $('#manualColType').val();
+        const opciones = $('#manualColOptions').val();
+        if (!nombre) return;
+
+        const url = editingManualId ? `/api/config/manual-columns/${editingManualId}` : '/api/config/manual-columns';
+        const method = editingManualId ? 'PUT' : 'POST';
+
+        await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre, tipo, opciones })
+        });
+
+        resetManualForm();
+        refreshManualColumnsList();
+        loadData();
+    }
+
+    function openEditManualModal(id, field, value, readOnly = false) {
+        editingManualValue = { id, field };
+        $('#editManualTitle').text(readOnly ? `Visualizando: ${field}` : `Editando: ${field}`);
+
+        const inputHtml = `
+            <textarea id="manualLongValue" 
+                ${readOnly ? 'readonly' : ''} 
+                class="w-full h-[70vh] bg-[#0e1116] border border-[#30363d] rounded-none p-6 text-sm text-[#c9d1d9] focus:ring-2 focus:ring-[#3b82f6]/20 transition-all outline-none resize-none custom-scrollbar font-medium leading-relaxed ${readOnly ? 'cursor-default' : ''}" 
+                placeholder="Sin informacin...">${value === 'undefined' ? '' : value}</textarea>
+        `;
+
+        $('#editManualInputContainer').empty().append(inputHtml);
+
+        if (readOnly) {
+            $('#editManualModal button[onclick="saveManualValue()"]').closest('div').addClass('hidden');
+        } else {
+            $('#editManualModal button[onclick="saveManualValue()"]').closest('div').removeClass('hidden');
+        }
+
+        toggleEditManualModal();
+    }
+
+    async function saveManualValue() {
+        const value = $('#manualLongValue').val();
+        const { id, field } = editingManualValue;
+
+        // Mostrar cargando en el botón
+        const btn = $('#editManualModal button[onclick="saveManualValue()"]');
+        const oldText = btn.text();
+        btn.prop('disabled', true).text('Guardando...');
+
+        try {
+            await updateInlineValue(null, id, field, value);
+            btn.text('¡Guardado!');
+            setTimeout(() => {
+                toggleEditManualModal();
+                btn.prop('disabled', false).text(oldText);
+            }, 1000);
+        } catch (e) {
+            btn.prop('disabled', false).text('Error al guardar');
+        }
+    }
+
+    let editingLateralId = null;
+
+    function toggleLateralFormModal() {
+        const isHidden = $('#lateralFormModal').hasClass('hidden');
+        closeAllModals();
+        if (isHidden) {
+            $('#lateralFormModal').removeClass('hidden').addClass('flex');
+        }
+    }
+
+    function openLateralForm(id) {
+        editingLateralId = id;
+        const row = rawData.find(r => r.__db_id == id);
+        if (!row) return;
+
+        $('#lateralFormSubtitle').hide(); // Hide the subtitle to save space
+        
+        const container = $('#lateralFormInputContainer').empty();
+        
+        // Determinar qué columnas están visibles actualmente
+        const visibleCols = [];
+        if (table) {
+            table.columns().every(function () {
+                if (this.visible()) {
+                    const name = this.dataSrc();
+                    if (typeof name === 'string' && !name.startsWith('__')) {
+                        visibleCols.push(name);
+                    }
+                }
+            });
+        }
+        
+        const manualColNames = manualFields.map(f => f.nombre);
+        const infoCols = visibleCols.filter(c => !manualColNames.includes(c));
+
+        // Sección 1: Información de Lectura (Columnas Visibles NO manuales)
+        if (infoCols.length > 0) {
+            const infoDiv = $('<div class="font-mono text-[11px] leading-relaxed text-[#e2e8f0] mb-6 space-y-0.5 break-words"></div>');
+            infoCols.forEach(colName => {
+                const val = row[colName] || '';
+                const displayVal = String(val).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                infoDiv.append(`
+                    <div><span class="uppercase text-[#60a5fa] font-black mr-1">${colName}:</span> <span class="text-[#c9d1d9]">${displayVal || '-'}</span></div>
+                `);
+            });
+            container.append(infoDiv);
+        }
+
+        // Sección 2: Edición Manual
+        if (!manualFields || manualFields.length === 0) {
+            container.append('<p class="text-xs text-[#8a8f98] font-medium italic">No hay columnas manuales configuradas.</p>');
+        }
+        
+        manualFields.forEach(f => {
+            const val = row[f.nombre] || '';
+            const safeVal = String(val).replace(/"/g, '&quot;');
+            
+            let inputHtml = '';
+            if (f.tipo === 'lista') {
+                const opts = (f.opciones || "").split(/[;,]/).map(o => o.trim()).filter(o => o);
+                const optionsHtml = opts.map(o => {
+                    const safeOpt = String(o).replace(/"/g, '&quot;');
+                    return `<option value="${safeOpt}" ${val == o ? 'selected' : ''}>${safeOpt}</option>`;
+                }).join('');
+                inputHtml = `<select id="lat_${f.id}" class="ios-input !bg-[#0e1116] !py-1.5 !text-[11px]">
+                    <option value="">--Seleccionar--</option>
+                    ${optionsHtml}
+                </select>`;
+            } else if (f.tipo === 'fecha') {
+                inputHtml = `<input type="date" id="lat_${f.id}" class="ios-input !bg-[#0e1116] !py-1.5 !text-[11px]" value="${safeVal}">`;
+            } else if (f.tipo === 'texto_largo') {
+                inputHtml = `<textarea id="lat_${f.id}" class="ios-input !bg-[#0e1116] !py-3 min-h-[100px] resize-none">${val}</textarea>`;
+            } else {
+                inputHtml = `<input type="text" id="lat_${f.id}" class="ios-input !bg-[#0e1116] !py-1.5 !text-[11px]" value="${safeVal}">`;
+            }
+            
+            container.append(`
+                <div class="space-y-1 mb-2.5">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-[#60a5fa]">${f.nombre}</label>
+                    ${inputHtml}
+                </div>
+            `);
+        });
+
+        toggleLateralFormModal();
+    }
+
+    async function saveLateralForm() {
+        if (!editingLateralId) return;
+        
+        const btn = $('#btnSaveLateralForm');
+        const oldText = btn.text();
+        btn.prop('disabled', true).text('Guardando...');
+        
+        try {
+            // Recopilar todos los valores modificados
+            const row = rawData.find(r => r.__db_id == editingLateralId);
+            if (!row) throw new Error("Row no encontrada");
+            
+            let updates = [];
+            manualFields.forEach(f => {
+                const input = $(`#lat_${f.id}`);
+                if (input.length) {
+                    const val = input.val();
+                    if (row[f.nombre] !== val) {
+                        updates.push({ field: f.nombre, value: val });
+                    }
+                }
+            });
+            
+            // Si hay actualizaciones, las enviamos secuencialmente (ya que updateInlineValue lo hace optimista)
+            // Se puede hacer Promise.all para ser más rápido
+            const promises = updates.map(u => {
+                // actualizamos el dato loca de forma optimista
+                row[u.field] = u.value;
+                return fetch('/api/proyectos/update-field', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: editingLateralId, field: u.field, value: u.value })
+                });
+            });
+            
+            if (promises.length > 0) {
+                await Promise.all(promises);
+                // Invalidar fila entera en datatables
+                if (table) {
+                    const dtRow = table.row(function(idx, data, node) {
+                        return data.__db_id === editingLateralId;
+                    });
+                    if (dtRow.length) {
+                        dtRow.invalidate().draw(false);
+                    }
+                }
+            }
+            
+            btn.text('¡Guardado!');
+            btn.removeClass('bg-[#3b82f6]').addClass('bg-emerald-500');
+            setTimeout(() => {
+                toggleLateralFormModal();
+                btn.prop('disabled', false).text(oldText).removeClass('bg-emerald-500').addClass('bg-[#3b82f6]');
+            }, 1000);
+            
+        } catch (e) {
+            console.error("Error guardando form lateral:", e);
+            btn.prop('disabled', false).text('Error al guardar').addClass('bg-rose-500');
+            setTimeout(() => btn.text(oldText).removeClass('bg-rose-500'), 2000);
+        }
+    }
+
+    async function deleteManualColumn(id) {
+        if (!confirm("¿Borrar columna?")) return;
+        await fetch(`/api/config/manual-columns/${id}`, { method: 'DELETE' });
+        refreshManualColumnsList();
+        loadData();
+    }
+
+    function toggleManualOptions() {
+        $('#manualOptionsContainer').toggleClass('hidden', $('#manualColType').val() !== 'lista');
+    }
+
+    function clearAllVirtualFilters() {
+        localStorage.removeItem('anton_filters');
+        $('.filter-maestro').val('');
+        $('.filter-input').val('');
+        if (table) table.columns().search('').draw();
+    }
+
+    async function exportToExcel() {
+        const filteredData = table.rows({ filter: 'applied' }).data().toArray();
+        const res = await fetch('/api/proyectos/export', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(filteredData)
+        });
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Consolidado_${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+
+    function confirmClear() {
+        closeAllModals();
+        $('#clearModal').removeClass('hidden').addClass('flex');
+    }
+    function confirmConsolidar() {
+        if (confirm("¿Estás seguro de que deseas ELIMINAR permanentEMENTE todos los registros cerrados ANTERIORES al 2026? Esta acción no se puede deshacer.")) {
+            executeConsolidar();
+        }
+    }
+
+    async function executeConsolidar() {
+        try {
+            const res = await fetch('/api/admin/consolidar-2026', { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                alert(`Consolidación completada. Se eliminaron ${data.deleted} registros antiguos.`);
+                loadData();
+            } else {
+                alert("Error al consolidar: " + (data.message || 'Error desconocido'));
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Error de conexión al servidor");
+        }
+    }
+
+    async function executeClear() {
+        await fetch('/api/proyectos/clear', { method: 'POST' });
+        location.reload();
+    }
+
+    // Sidebar Resizing Logic
+    function initSidebarResizer() {
+        const sidebar = document.getElementById('masterSidebar');
+        const resizer = document.getElementById('sidebarResizer');
+        if (!resizer) return;
+
+        let isResizing = false;
+
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            document.body.style.cursor = 'col-resize';
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', stopResizing);
+            e.preventDefault();
+        });
+
+        function handleMouseMove(e) {
+            if (!isResizing) return;
+            const newWidth = e.clientX;
+            if (newWidth >= 150 && newWidth <= 600) {
+                sidebar.style.width = `${newWidth}px`;
+                if (table) table.columns.adjust();
+                localStorage.setItem('anton_sidebar_width', newWidth);
+            }
+        }
+
+        function stopResizing() {
+            isResizing = false;
+            document.body.style.cursor = 'default';
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', stopResizing);
+        }
+
+        // Restore saved width
+        const savedWidth = localStorage.getItem('anton_sidebar_width');
+        if (savedWidth) sidebar.style.width = `${savedWidth}px`;
+
+        // Restore collapsed state
+        if (localStorage.getItem('anton_sidebar_collapsed') === 'true') {
+            toggleSidebar(true);
+        }
+    }
+
+    function toggleSidebar(forceCollapse) {
+        const sidebar = $('#masterSidebar');
+        const btnOpen = $('#btnOpenSidebar');
+        const isCollapsed = sidebar.hasClass('collapsed');
+
+        if (forceCollapse || !isCollapsed) {
+            sidebar.addClass('collapsed');
+            btnOpen.removeClass('hidden').addClass('flex');
+            localStorage.setItem('anton_sidebar_collapsed', 'true');
+        } else {
+            sidebar.removeClass('collapsed');
+            btnOpen.addClass('hidden').removeClass('flex');
+            localStorage.setItem('anton_sidebar_collapsed', 'false');
+        }
+
+        setTimeout(() => {
+            if (table) {
+                table.columns.adjust().draw();
+                syncDoubleScroll();
+            }
+        }, 200);
+    }
+
+    function syncDoubleScroll() {
+        const wrap = $('.dataTables_scrollBody');
+        const top = $('#topScrollContainer');
+        const topInner = $('#topScroll');
+        if (wrap.length && top.length && topInner.length) {
+            setTimeout(() => {
+                const scrollWidth = wrap[0].scrollWidth;
+                const containerWidth = wrap.width();
+                topInner.css('width', scrollWidth + 'px');
+
+                if (scrollWidth <= containerWidth + 5) {
+                    top.addClass('hidden');
+                } else {
+                    top.removeClass('hidden');
+                }
+            }, 500);
+
+            top.off('scroll').on('scroll', function () {
+                wrap.scrollLeft($(this).scrollLeft());
+            });
+            wrap.off('scroll').on('scroll', function () {
+                top.scrollLeft($(this).scrollLeft());
+                // Force sync DataTables' header scroll
+                $('.dataTables_scrollHead').scrollLeft($(this).scrollLeft());
+            });
+        }
+    }
+
+    $(document).ready(() => {
+        loadData();
+        initSidebarResizer();
+        $(window).on('resize', syncDoubleScroll);
+    });
+</script>
+{% endblock %}
+{% block title %}Cerradas{% endblock %}
