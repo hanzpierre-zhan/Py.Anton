@@ -280,7 +280,7 @@
             class="bg-[#21262d] w-full max-w-md h-full rounded-none shadow-2xl flex flex-col overflow-hidden animate-slide-left border-l border-[#30363d]">
             <div class="p-8 border-b border-[#30363d] flex items-center justify-between bg-[#21262d] shrink-0">
                 <div>
-                    <h3 class="text-xl font-black text-white">Formulario</h3>
+                    <h3 class="text-xl font-black text-white">Estatus de la obra</h3>
                     <p class="text-[10px] font-bold text-[#8a8f98] uppercase tracking-widest mt-1" id="lateralFormSubtitle">Llenado Manual</p>
                 </div>
                 <button onclick="toggleLateralFormModal()"
@@ -1420,12 +1420,42 @@
         const row = rawData.find(r => r.__db_id == id);
         if (!row) return;
 
-        $('#lateralFormSubtitle').text(`ID: ${row.ITEMPLAN || row.PROYECTO || id}`);
+        $('#lateralFormSubtitle').hide(); // Hide the subtitle to save space
         
         const container = $('#lateralFormInputContainer').empty();
         
+        // Determinar qué columnas están visibles actualmente
+        const visibleCols = [];
+        if (table) {
+            table.columns().every(function () {
+                if (this.visible()) {
+                    const name = this.dataSrc();
+                    if (typeof name === 'string' && !name.startsWith('__')) {
+                        visibleCols.push(name);
+                    }
+                }
+            });
+        }
+        
+        const manualColNames = manualFields.map(f => f.nombre);
+        const infoCols = visibleCols.filter(c => !manualColNames.includes(c));
+
+        // Sección 1: Información de Lectura (Columnas Visibles NO manuales)
+        if (infoCols.length > 0) {
+            const infoDiv = $('<div class="font-mono text-[11px] leading-relaxed text-[#e2e8f0] mb-6 space-y-0.5 break-words"></div>');
+            infoCols.forEach(colName => {
+                const val = row[colName] || '';
+                const displayVal = String(val).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                infoDiv.append(`
+                    <div><span class="uppercase text-[#60a5fa] font-black mr-1">${colName}:</span> <span class="text-[#c9d1d9]">${displayVal || '-'}</span></div>
+                `);
+            });
+            container.append(infoDiv);
+        }
+
+        // Sección 2: Edición Manual
         if (!manualFields || manualFields.length === 0) {
-            container.append('<p class="text-xs text-slate-500 italic">No hay columnas manuales configuradas.</p>');
+            container.append('<p class="text-xs text-[#8a8f98] font-medium italic">No hay columnas manuales configuradas.</p>');
         }
         
         manualFields.forEach(f => {
@@ -1439,21 +1469,21 @@
                     const safeOpt = String(o).replace(/"/g, '&quot;');
                     return `<option value="${safeOpt}" ${val == o ? 'selected' : ''}>${safeOpt}</option>`;
                 }).join('');
-                inputHtml = `<select id="lat_${f.id}" class="ios-input !bg-[#0e1116] !py-3">
+                inputHtml = `<select id="lat_${f.id}" class="ios-input !bg-[#0e1116] !py-1.5 !text-[11px]">
                     <option value="">--Seleccionar--</option>
                     ${optionsHtml}
                 </select>`;
             } else if (f.tipo === 'fecha') {
-                inputHtml = `<input type="date" id="lat_${f.id}" class="ios-input !bg-[#0e1116] !py-3" value="${safeVal}">`;
+                inputHtml = `<input type="date" id="lat_${f.id}" class="ios-input !bg-[#0e1116] !py-1.5 !text-[11px]" value="${safeVal}">`;
             } else if (f.tipo === 'texto_largo') {
                 inputHtml = `<textarea id="lat_${f.id}" class="ios-input !bg-[#0e1116] !py-3 min-h-[100px] resize-none">${val}</textarea>`;
             } else {
-                inputHtml = `<input type="text" id="lat_${f.id}" class="ios-input !bg-[#0e1116] !py-3" value="${safeVal}">`;
+                inputHtml = `<input type="text" id="lat_${f.id}" class="ios-input !bg-[#0e1116] !py-1.5 !text-[11px]" value="${safeVal}">`;
             }
             
             container.append(`
-                <div class="space-y-1">
-                    <label class="text-[10px] font-black uppercase tracking-widest text-[#8a8f98]">${f.nombre}</label>
+                <div class="space-y-1 mb-2.5">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-[#60a5fa]">${f.nombre}</label>
                     ${inputHtml}
                 </div>
             `);
