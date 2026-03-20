@@ -88,7 +88,9 @@
                             d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
                 </button>
+                {% endif %}
 
+                {% if current_user and current_user.rol in ['Admin', 'Administrador', 'Editor'] %}
                 <button onclick="toggleOrderModal()"
                     class="p-2.5 hover:bg-[#21262d] text-[#8a8f98] hover:text-[#60a5fa] rounded-none transition-all border border-transparent hover:border-[#30363d]"
                     title="Reordenar Columnas">
@@ -107,7 +109,9 @@
                         </path>
                     </svg>
                 </button>
+                {% endif %}
 
+                {% if current_user and current_user.rol in ['Admin', 'Administrador'] %}
                 <div class="h-8 w-px bg-[#21262d] mx-1"></div>
 
                 <button onclick="confirmClear()"
@@ -265,6 +269,34 @@
                     </div>
                 </div>
                 <div id="manualColumnsList" class="space-y-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Formulario Lateral (Llenado Manual) -->
+    <div id="lateralFormModal"
+        class="absolute inset-0 bg-[#0e1116]/40 backdrop-blur-sm flex justify-end hidden pointer-events-auto p-4 transition-all overflow-hidden z-[201]">
+        <div
+            class="bg-[#21262d] w-full max-w-md h-full rounded-none shadow-2xl flex flex-col overflow-hidden animate-slide-left border-l border-[#30363d]">
+            <div class="p-8 border-b border-[#30363d] flex items-center justify-between bg-[#21262d] shrink-0">
+                <div>
+                    <h3 class="text-xl font-black text-white">Formulario</h3>
+                    <p class="text-[10px] font-bold text-[#8a8f98] uppercase tracking-widest mt-1" id="lateralFormSubtitle">Llenado Manual</p>
+                </div>
+                <button onclick="toggleLateralFormModal()"
+                    class="p-2 hover:bg-[#30363d] rounded-none text-[#8a8f98] hover:text-white transition-all">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="lateralFormInputContainer" class="flex-1 overflow-y-auto p-8 space-y-6 ios-scrollbar">
+                <!-- Generado por JS -->
+            </div>
+            <div class="p-6 border-t border-[#30363d] bg-[#181b21] shrink-0">
+                <button onclick="saveLateralForm()" id="btnSaveLateralForm"
+                    class="w-full py-4 bg-[#3b82f6] text-white rounded-none text-sm font-black hover:bg-blue-700 hover:scale-[1.02] transition-all shadow-xl shadow-[#1e3a8a]/20">Guardar Cambios</button>
             </div>
         </div>
     </div>
@@ -894,9 +926,9 @@
                             if (!data) return "";
                             const displayData = data.length > 40 ? data.substring(0, 40) + "..." : data;
                             return `<div class="max-w-[250px] truncate cursor-pointer hover:text-blue-400 transition-colors" 
-                                         onclick="openEditManualModal('${row.__db_id}', '${k}', \`${safeData.replace(/`/g, '\\`')}\`, true)"
+                                         onclick="openLateralForm('${row.__db_id}')"
                                          data-full="${safeData}" 
-                                         title="Haga clic para ver completo">
+                                         title="Haga clic para editar formulario">
                                         ${displayData}
                                     </div>`;
                         }
@@ -941,52 +973,18 @@
                         const isManual = !!config;
 
                         if (isManual) {
-                            console.log(`RENDER MANUAL: Col=${k}, Role=${userRoleClean}, CanEdit=${canEdit}, Tipo=${config.tipo}`);
                             if (!canEdit) return data || "";
 
                             const safeData = data ? String(data).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;') : "";
+                            const displayData = safeData.length > 30 ? safeData.substring(0, 30) + "..." : (safeData || "Editar...");
 
-                            if (config.tipo === 'lista') {
-                                const rawOpts = config.opciones || "";
-                                const opts = rawOpts.split(/[;,]/).map(o => o.trim()).filter(o => o);
-                                const optionsHtml = opts.map(o => {
-                                    const safeOpt = String(o).replace(/"/g, '&quot;');
-                                    return `<option value="${safeOpt}" ${data == o ? 'selected' : ''} class="bg-slate-900 text-white">${safeOpt}</option>`;
-                                }).join('');
-                                return `<div class="p-0.5 relative group/manual">
-                                    <select class="w-full min-w-[110px] bg-slate-800 border box-border border-blue-500/30 hover:border-blue-500 outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-1 text-[10px] text-slate-200 transition-all cursor-pointer shadow-sm pr-6" onchange="updateInlineValue(this, '${row.__db_id}', '${k}', this.value)">
-                                        <option value="" class="bg-slate-900 text-slate-500">--Seleccionar--</option>
-                                        ${optionsHtml}
-                                    </select>
-                                    <div class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-0 group-hover/manual:opacity-50 transition-opacity">
-                                        <svg class="w-2.5 h-2.5 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg>
-                                    </div>
-                                </div>`;
-                            } else if (config.tipo === 'fecha') {
-                                return `<div class="p-0.5 relative group/manual">
-                                    <input type="date" class="w-full bg-slate-800 border box-border border-blue-500/30 hover:border-blue-500 outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-1 text-[10px] text-slate-200 transition-all cursor-pointer shadow-sm" value="${safeData}" onchange="updateInlineValue(this, '${row.__db_id}', '${k}', this.value)">
-                                    <div class="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none opacity-0 group-hover/manual:opacity-50 transition-opacity">
-                                        <svg class="w-2.5 h-2.5 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg>
-                                    </div>
-                                </div>`;
-                            } else if (config.tipo === 'texto_largo') {
-                                const displayData = safeData.length > 50 ? safeData.substring(0, 50) + "..." : (safeData || "Escribir...");
-                                return `<div class="p-0.5 relative group/manual">
-                                    <button onclick="openEditManualModal('${row.__db_id}', '${k}', this.dataset.full)" 
-                                            data-full="${safeData}"
-                                            class="w-full min-w-[150px] bg-slate-800 border box-border border-blue-500/10 hover:border-blue-500/50 outline-none rounded px-2 py-2 text-[10px] text-left text-slate-300 italic transition-all shadow-sm flex items-center justify-between gap-2 overflow-hidden">
-                                        <span class="truncate">${displayData}</span>
-                                        <svg class="w-3 h-3 text-blue-400 shrink-0 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
-                                    </button>
-                                </div>`;
-                            } else {
-                                return `<div class="p-0.5 relative group/manual">
-                                    <input type="text" class="w-full min-w-[130px] bg-slate-800 border box-border border-blue-500/30 hover:border-blue-500 outline-none focus:ring-1 focus:ring-blue-500 rounded px-2 py-1 text-[10px] text-slate-200 placeholder-slate-600 transition-all shadow-sm" value="${safeData}" placeholder="Escribir..." onchange="updateInlineValue(this, '${row.__db_id}', '${k}', this.value)">
-                                    <div class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-0 group-hover/manual:opacity-50 transition-opacity">
-                                        <svg class="w-2.5 h-2.5 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg>
-                                    </div>
-                                </div>`;
-                            }
+                            return `<div class="p-0.5 relative group/manual">
+                                <button onclick="openLateralForm('${row.__db_id}')" 
+                                        class="w-full min-w-[110px] bg-slate-800 border box-border border-blue-500/10 hover:border-blue-500/50 outline-none rounded px-2 py-1.5 text-[10px] text-left text-slate-300 transition-all shadow-sm flex items-center justify-between gap-1 overflow-hidden group-hover/manual:bg-slate-700" title="Editar formulario manual">
+                                    <span class="truncate">${displayData}</span>
+                                    <svg class="w-3 h-3 text-blue-400 shrink-0 opacity-40 group-hover/manual:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                </button>
+                            </div>`;
                         }
                         return data || "";
                     }
@@ -1168,6 +1166,7 @@
     function closeAllModals() {
         $('#modalContainer > div').addClass('hidden').removeClass('flex');
         $('#editManualModal').addClass('hidden').removeClass('flex');
+        $('#lateralFormModal').addClass('hidden').removeClass('flex');
     }
 
     function toggleColumnModal() {
@@ -1403,6 +1402,125 @@
             }, 1000);
         } catch (e) {
             btn.prop('disabled', false).text('Error al guardar');
+        }
+    }
+
+    let editingLateralId = null;
+
+    function toggleLateralFormModal() {
+        const isHidden = $('#lateralFormModal').hasClass('hidden');
+        closeAllModals();
+        if (isHidden) {
+            $('#lateralFormModal').removeClass('hidden').addClass('flex');
+        }
+    }
+
+    function openLateralForm(id) {
+        editingLateralId = id;
+        const row = rawData.find(r => r.__db_id == id);
+        if (!row) return;
+
+        $('#lateralFormSubtitle').text(`ID: ${row.ITEMPLAN || row.PROYECTO || id}`);
+        
+        const container = $('#lateralFormInputContainer').empty();
+        
+        if (!manualFields || manualFields.length === 0) {
+            container.append('<p class="text-xs text-slate-500 italic">No hay columnas manuales configuradas.</p>');
+        }
+        
+        manualFields.forEach(f => {
+            const val = row[f.nombre] || '';
+            const safeVal = String(val).replace(/"/g, '&quot;');
+            
+            let inputHtml = '';
+            if (f.tipo === 'lista') {
+                const opts = (f.opciones || "").split(/[;,]/).map(o => o.trim()).filter(o => o);
+                const optionsHtml = opts.map(o => {
+                    const safeOpt = String(o).replace(/"/g, '&quot;');
+                    return `<option value="${safeOpt}" ${val == o ? 'selected' : ''}>${safeOpt}</option>`;
+                }).join('');
+                inputHtml = `<select id="lat_${f.id}" class="ios-input !bg-[#0e1116] !py-3">
+                    <option value="">--Seleccionar--</option>
+                    ${optionsHtml}
+                </select>`;
+            } else if (f.tipo === 'fecha') {
+                inputHtml = `<input type="date" id="lat_${f.id}" class="ios-input !bg-[#0e1116] !py-3" value="${safeVal}">`;
+            } else if (f.tipo === 'texto_largo') {
+                inputHtml = `<textarea id="lat_${f.id}" class="ios-input !bg-[#0e1116] !py-3 min-h-[100px] resize-none">${val}</textarea>`;
+            } else {
+                inputHtml = `<input type="text" id="lat_${f.id}" class="ios-input !bg-[#0e1116] !py-3" value="${safeVal}">`;
+            }
+            
+            container.append(`
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-[#8a8f98]">${f.nombre}</label>
+                    ${inputHtml}
+                </div>
+            `);
+        });
+
+        toggleLateralFormModal();
+    }
+
+    async function saveLateralForm() {
+        if (!editingLateralId) return;
+        
+        const btn = $('#btnSaveLateralForm');
+        const oldText = btn.text();
+        btn.prop('disabled', true).text('Guardando...');
+        
+        try {
+            // Recopilar todos los valores modificados
+            const row = rawData.find(r => r.__db_id == editingLateralId);
+            if (!row) throw new Error("Row no encontrada");
+            
+            let updates = [];
+            manualFields.forEach(f => {
+                const input = $(`#lat_${f.id}`);
+                if (input.length) {
+                    const val = input.val();
+                    if (row[f.nombre] !== val) {
+                        updates.push({ field: f.nombre, value: val });
+                    }
+                }
+            });
+            
+            // Si hay actualizaciones, las enviamos secuencialmente (ya que updateInlineValue lo hace optimista)
+            // Se puede hacer Promise.all para ser más rápido
+            const promises = updates.map(u => {
+                // actualizamos el dato loca de forma optimista
+                row[u.field] = u.value;
+                return fetch('/api/proyectos/update-field', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: editingLateralId, field: u.field, value: u.value })
+                });
+            });
+            
+            if (promises.length > 0) {
+                await Promise.all(promises);
+                // Invalidar fila entera en datatables
+                if (table) {
+                    const dtRow = table.row(function(idx, data, node) {
+                        return data.__db_id === editingLateralId;
+                    });
+                    if (dtRow.length) {
+                        dtRow.invalidate().draw(false);
+                    }
+                }
+            }
+            
+            btn.text('¡Guardado!');
+            btn.removeClass('bg-[#3b82f6]').addClass('bg-emerald-500');
+            setTimeout(() => {
+                toggleLateralFormModal();
+                btn.prop('disabled', false).text(oldText).removeClass('bg-emerald-500').addClass('bg-[#3b82f6]');
+            }, 1000);
+            
+        } catch (e) {
+            console.error("Error guardando form lateral:", e);
+            btn.prop('disabled', false).text('Error al guardar').addClass('bg-rose-500');
+            setTimeout(() => btn.text(oldText).removeClass('bg-rose-500'), 2000);
         }
     }
 
