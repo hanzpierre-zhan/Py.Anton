@@ -751,12 +751,28 @@
 
     async function loadData() {
         try {
-            const [mfRes, mRes, pRes, fRes] = await Promise.all([
-                fetch('/api/config/manual-columns').then(r => r.json()),
-                fetch('/api/config/mapeos').then(r => r.json()),
-                fetch('/api/cerradas').then(r => r.json()),
-                fetch('/api/config/filtros').then(r => r.json())
-            ]);
+            const fetches = [
+                { name: 'Columnas Manuales', url: '/api/config/manual-columns' },
+                { name: 'Mapeos', url: '/api/config/mapeos' },
+                { name: 'Proyectos Cerrados', url: '/api/cerradas' },
+                { name: 'Filtros', url: '/api/config/filtros' }
+            ];
+
+            const results = await Promise.all(fetches.map(async f => {
+                const res = await fetch(f.url);
+                if (!res.ok) {
+                    throw new Error(`${f.name}: Error ${res.status} al obtener datos`);
+                }
+                const text = await res.text();
+                try {
+                    return JSON.parse(text);
+                } catch (err) {
+                    console.error(`Error de JSON en ${f.name}:`, text.substring(0, 100));
+                    throw new Error(`${f.name}: Respuesta del servidor no es JSON válido (posible error 500 o redirección)`);
+                }
+            }));
+
+            const [mfRes, mRes, pRes, fRes] = results;
 
             manualFields = mfRes || [];
             rawData = pRes || [];

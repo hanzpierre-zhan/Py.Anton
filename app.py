@@ -912,7 +912,9 @@ def get_filtered_projects(only_cerradas=False):
     configs = {c.columna: {"tipo": c.tipo, "virtual_cols": json.loads(c.virtual_cols_json or '[]')} 
                for c in ConfiguracionFiltro.query.all()}
 
-    obras = GestionObra.query.all()
+    # Usamos yield_per para no cargar todo en RAM de golpe (si el driver lo soporta)
+    # o simplemente iteramos sobre el query para no usar .all()
+    obras_query = GestionObra.query
     resultado = []
     hoy = datetime.now()
     
@@ -920,68 +922,72 @@ def get_filtered_projects(only_cerradas=False):
     ESTADOS_CERRADAS = ['CERRADO', 'CERTIFICADO', 'CANCELADO', 'SUSPENDIDO', 'TRUNCO']
     SUBESTADOS_TRUNCO_CERRADAS = ['CERTIFICADO', 'TRUNCO', 'EN CERTIFICACIÓN', 'DISEÑO EJECUTADO', 'CANCELADO']
 
-    for o in obras:
-        data = json.loads(o.data_json)
-        data = augment_virtual_columns(data, mapeos, configs)
-        
-        # Lógica de separación Proyectos vs Cerradas
-        estado_plan = str(data.get('ESTADO PLAN', '')).strip().upper()
-        subestado_trunco = str(data.get('SUBESTADO TRUNCO', '')).strip().upper()
-        
-        is_cerrada = False
-        if estado_plan in ['CERRADO', 'CERTIFICADO', 'CANCELADO', 'SUSPENDIDO']:
-            is_cerrada = True
-        elif estado_plan == 'TRUNCO' and subestado_trunco in SUBESTADOS_TRUNCO_CERRADAS:
-            is_cerrada = True
+    for o in obras_query:
+        try:
+            data = json.loads(o.data_json)
+            data = augment_virtual_columns(data, mapeos, configs)
             
-        if only_cerradas and not is_cerrada: continue
-        if not only_cerradas and is_cerrada: continue
+            # Lógica de separación Proyectos vs Cerradas
+            estado_plan = str(data.get('ESTADO PLAN', '')).strip().upper()
+            subestado_trunco = str(data.get('SUBESTADO TRUNCO', '')).strip().upper()
+            
+            is_cerrada = False
+            if estado_plan in ['CERRADO', 'CERTIFICADO', 'CANCELADO', 'SUSPENDIDO']:
+                is_cerrada = True
+            elif estado_plan == 'TRUNCO' and subestado_trunco in SUBESTADOS_TRUNCO_CERRADAS:
+                is_cerrada = True
+                
+            if only_cerradas and not is_cerrada: continue
+            if not only_cerradas and is_cerrada: continue
 
-        # Aplicar filtrado por restricciones
-        skip = False
-        if restricciones:
-            for col, valores_permitidos in restricciones.items():
-                val_obra = str(data.get(col, "")).strip()
-                if val_obra not in valores_permitidos:
-                    skip = True
-                    break
-        if skip: continue
+            # Aplicar filtrado por restricciones
+            skip = False
+            if restricciones:
+                for col, valores_permitidos in restricciones.items():
+                    val_obra = str(data.get(col, "")).strip()
+                    if val_obra not in valores_permitidos:
+                        skip = True
+                        break
+            if skip: continue
 
-        # Criterio de Año para Cerradas (2026 en adelante)
-        if only_cerradas:
+            # Criterio de Año para Cerradas (2026 en adelante)
+            if only_cerradas:
+                fecha_creacion = data.get('FECHA CREACION IP')
+                year_ip = None
+                if fecha_creacion:
+                    for fmt in ("%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y", "%m/%d/%Y"):
+                        try:
+                            year_ip = datetime.strptime(str(fecha_creacion).strip(), fmt).year
+                            break
+                        except: continue
+                
+                # Si es Cerrada pero el año es anterior a 2026, la omitimos de la vista
+                if year_ip and year_ip < 2026:
+                    continue
+
+            data['__db_id'] = o.id
+            
+            # Cálculo de Antigüedad (Días)
+            antiguedad = ""
             fecha_creacion = data.get('FECHA CREACION IP')
-            year_ip = None
             if fecha_creacion:
-                for fmt in ("%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y", "%m/%d/%Y"):
-                    try:
-                        year_ip = datetime.strptime(str(fecha_creacion).strip(), fmt).year
-                        break
-                    except: continue
+                try:
+                    f_obj = None
+                    for fmt in ("%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y", "%m/%d/%Y"):
+                        try:
+                            f_obj = datetime.strptime(str(fecha_creacion).strip(), fmt)
+                            break
+                        except: continue
+                    if f_obj:
+                        diff = hoy - f_obj
+                        antiguedad = max(0, diff.days)
+                except: pass
             
-            # Si es Cerrada pero el año es anterior a 2026, la omitimos de la vista
-            if year_ip and year_ip < 2026:
-                continue
-
-        data['__db_id'] = o.id
-        
-        # Cálculo de Antigüedad (Días)
-        antiguedad = ""
-        fecha_creacion = data.get('FECHA CREACION IP')
-        if fecha_creacion:
-            try:
-                f_obj = None
-                for fmt in ("%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y", "%m/%d/%Y"):
-                    try:
-                        f_obj = datetime.strptime(str(fecha_creacion).strip(), fmt)
-                        break
-                    except: continue
-                if f_obj:
-                    diff = hoy - f_obj
-                    antiguedad = max(0, diff.days)
-            except: pass
-        
-        data['TIMING'] = antiguedad
-        resultado.append(data)
+            data['TIMING'] = antiguedad
+            resultado.append(data)
+        except Exception as e:
+            print(f"Error procesando obra {o.id}: {e}")
+            continue
     return resultado
 
 @app.route('/api/proyectos', methods=['GET'])
