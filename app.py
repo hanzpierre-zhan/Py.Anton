@@ -987,6 +987,10 @@ def get_filtered_projects(only_cerradas=False):
             
             data['TIMING'] = antiguedad
             resultado.append(data)
+            
+            # Optimización de memoria en Render (Plan Free)
+            if len(resultado) % 500 == 0:
+                gc.collect()
         except Exception as e:
             print(f"Error procesando obra {oid}: {e}")
             continue
