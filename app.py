@@ -912,9 +912,10 @@ def get_filtered_projects(only_cerradas=False):
     configs = {c.columna: {"tipo": c.tipo, "virtual_cols": json.loads(c.virtual_cols_json or '[]')} 
                for c in ConfiguracionFiltro.query.all()}
 
-    # Usamos yield_per para no cargar todo en RAM de golpe (si el driver lo soporta)
-    # o simplemente iteramos sobre el query para no usar .all()
-    obras_query = GestionObra.query
+    # En lugar de usar el ORM que carga todo en RAM, usamos raw SQL y cursor para evitar MemoryError en Render
+    q = text("SELECT id, data_json FROM gestion_obras")
+    res_proxy = db.session.execute(q)
+    
     resultado = []
     hoy = datetime.now()
     
@@ -922,9 +923,10 @@ def get_filtered_projects(only_cerradas=False):
     ESTADOS_CERRADAS = ['CERRADO', 'CERTIFICADO', 'CANCELADO', 'SUSPENDIDO', 'TRUNCO']
     SUBESTADOS_TRUNCO_CERRADAS = ['CERTIFICADO', 'TRUNCO', 'EN CERTIFICACIÓN', 'DISEÑO EJECUTADO', 'CANCELADO']
 
-    for o in obras_query:
+    for row in res_proxy:
         try:
-            data = json.loads(o.data_json)
+            oid = row[0]
+            data = json.loads(row[1])
             data = augment_virtual_columns(data, mapeos, configs)
             
             # Lógica de separación Proyectos vs Cerradas
@@ -965,7 +967,7 @@ def get_filtered_projects(only_cerradas=False):
                 if year_ip and year_ip < 2026:
                     continue
 
-            data['__db_id'] = o.id
+            data['__db_id'] = oid
             
             # Cálculo de Antigüedad (Días)
             antiguedad = ""
@@ -986,7 +988,7 @@ def get_filtered_projects(only_cerradas=False):
             data['TIMING'] = antiguedad
             resultado.append(data)
         except Exception as e:
-            print(f"Error procesando obra {o.id}: {e}")
+            print(f"Error procesando obra {oid}: {e}")
             continue
     return resultado
 
@@ -1004,15 +1006,20 @@ def get_cerradas():
 @admin_required
 def consolidar_cerradas():
     """Elimina permanentemente de la DB registros cerrados anteriores al 2026."""
-    obras = GestionObra.query.all()
     deleted_count = 0
     
     # Criterios para Cerradas
     SUBESTADOS_TRUNCO_CERRADAS = ['CERTIFICADO', 'TRUNCO', 'EN CERTIFICACIÓN', 'DISEÑO EJECUTADO', 'CANCELADO']
     
-    for o in obras:
+    # SQLite direct fetch para minimizar RAM
+    q = text("SELECT id, data_json FROM gestion_obras")
+    res_proxy = db.session.execute(q)
+    ids_to_delete = []
+
+    for row in res_proxy:
         try:
-            data = json.loads(o.data_json)
+            oid = row[0]
+            data = json.loads(row[1])
             estado_plan = str(data.get('ESTADO PLAN', '')).strip().upper()
             subestado_trunco = str(data.get('SUBESTADO TRUNCO', '')).strip().upper()
             
@@ -1033,9 +1040,18 @@ def consolidar_cerradas():
                         except: continue
                 
                 if year_ip and year_ip < 2026:
-                    db.session.delete(o)
-                    deleted_count += 1
+                    ids_to_delete.append(oid)
         except: continue
+        
+    if ids_to_delete:
+        # Batch delete en SQLite
+        for i in range(0, len(ids_to_delete), 500):
+            batch = ids_to_delete[i:i+500]
+            db.session.execute(
+                GestionObra.__table__.delete().where(GestionObra.id.in_(batch))
+            )
+            deleted_count += len(batch)
+
         
     db.session.commit()
     return jsonify({"success": True, "deleted": deleted_count})

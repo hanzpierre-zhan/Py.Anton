@@ -751,7 +751,13 @@
             const results = await Promise.all(fetches.map(async f => {
                 const res = await fetch(f.url);
                 if (!res.ok) {
-                    throw new Error(`${f.name}: Error ${res.status} al obtener datos`);
+                    let errorTrace = "";
+                    try {
+                        const errData = await res.json();
+                        if (errData.trace) errorTrace = "\\n\\nDetalle:\\n" + errData.trace;
+                        else if (errData.message) errorTrace = "\\n\\nDetalle:\\n" + errData.message;
+                    } catch (e) {}
+                    throw new Error(`${f.name}: Error ${res.status} al obtener datos${errorTrace}`);
                 }
                 const text = await res.text();
                 try {
