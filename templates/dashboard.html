@@ -102,37 +102,7 @@
     let allProcessedProjects = [];
 
     async function initDashboard() {
-        const [projects, fRes, mapeos] = await Promise.all([
-            fetch('/api/proyectos').then(r => r.json()),
-            fetch('/api/config/filtros').then(r => r.json()),
-            fetch('/api/config/mapeos').then(r => r.json())
-        ]);
-
-        const filterConfigs = fRes || {};
-        
-        const vColsSet = new Set();
-        Object.values(filterConfigs).forEach(cfg => {
-            if (cfg.virtual_cols) cfg.virtual_cols.forEach(vc => vColsSet.add(vc));
-        });
-        const vCols = Array.from(vColsSet);
-
-        allProcessedProjects = projects.map(p => {
-            const row = { ...p };
-            vCols.forEach(vc => {
-                row[vc] = "";
-                mapeos.forEach(m => {
-                    const critVal = String(p[m.columna_criterio] || '').trim();
-                    if (critVal === String(m.valor_criterio).trim()) {
-                        const cfg = filterConfigs[m.columna_criterio];
-                        const allowed = (cfg && cfg.virtual_cols) || [];
-                        if (allowed.includes(vc) && m.valores[vc]) {
-                            row[vc] = m.valores[vc];
-                        }
-                    }
-                });
-            });
-            return row;
-        });
+        allProcessedProjects = await fetch('/api/proyectos').then(r => r.json());
 
         // Poblado de selector de Jefatura
         const jefaturas = [...new Set(allProcessedProjects.map(p => String(p['JEFATURA'] || '').trim()).filter(v => v))].sort();
@@ -154,7 +124,10 @@
 
         const filterData = (negocio, responsable) => {
             const isMant = negocio === 'MANTENIMIENTO';
-            const resMatch = (p) => String(p['RESPONSABLE'] || '').toUpperCase() === responsable.toUpperCase();
+            const resMatch = (p) => {
+                const resp = String(p['RESPONSABLE'] || p['EMPRESA COLABORADORA'] || '').toUpperCase();
+                return resp === responsable.toUpperCase();
+            };
             const negMatch = (p) => {
                 const val = String(p['NEGOCIO'] || '').toUpperCase();
                 return isMant ? val === 'MANTENIMIENTO' : (val === 'INGENIERIA' || val === 'INGENIERÍA');

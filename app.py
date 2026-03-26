@@ -107,12 +107,6 @@ try:
         if not ConfiguracionGlobal.query.get('import_filter_active'):
             db.session.add(ConfiguracionGlobal(clave='import_filter_active', valor='true'))
             
-        # Asegurar estados de Cerradas en Filtro Maestro (solicitado por usuario)
-        cerradas_states = ['Cerrado', 'Certificado', 'Cancelado', 'Suspendido', 'Trunco']
-        for s in cerradas_states:
-            if not FiltroMaestro.query.filter_by(entidad='ESTADO PLAN', valor=s).first():
-                db.session.add(FiltroMaestro(entidad='ESTADO PLAN', valor=s))
-        
         db.session.commit()
         print("Base de datos inicializada correctamente.")
 except Exception as e:
@@ -230,6 +224,8 @@ def route_dashboard():
 @login_required
 def route_cerradas():
     return render_template('cerradas.html')
+
+
 
 # --- API: LOGIN ---
 
@@ -437,7 +433,7 @@ def process_import():
         else:
             filter_active = filter_active_val == 'true'
             
-        entidad_filtro = (request.form.get('entidad_filtro') or 'ESTADO PLAN').strip()
+
         
         if not file: return jsonify({"error": "No hay archivo"}), 400
         
@@ -593,7 +589,6 @@ def process_import():
                         for k, v in row.items():
                             if k in manual_cols_names: data[k] = v
                     else:
-                        # Actualización obligatoria de estados para que se muevan a "Cerradas" si corresponde
                         for k in ['ESTADO PLAN', 'SUBESTADO TRUNCO', 'ESTADO', 'SITUACION']:
                             if k in row: data[k] = row[k]
                     obra.data_json = safe_json_dumps(data)
@@ -606,17 +601,19 @@ def process_import():
                     gc.collect()
                 continue # Pasar a la siguiente obra
 
-            # --- PASO 2: FILTRADO DE NUEVOS (Solo por entidad seleccionada) ---
+            # --- PASO 2: FILTRADO DE NUEVOS ---
             if source_type == 'planobraCSV':
                 if filter_active:
-                    # Validamos solo por la entidad configurada (ej: ESTADO PLAN)
-                    # Esto evita descartar obras por Jefaturas o Subproyectos nuevos
-                    if entidad_filtro in row:
-                        vals_permitidos = filtros_dict.get(entidad_filtro, [])
-                        if row.get(entidad_filtro) not in vals_permitidos:
-                            discarded += 1
-                            continue
-                    # Si no existe la columna de filtro en la fila, por seguridad la dejamos pasar o podrías descartarla
+                    skip = False
+                    for entidad, valores_permitidos in filtros_dict.items():
+                        if entidad in row:
+                            val_fila = str(row.get(entidad, "")).strip()
+                            if val_fila and val_fila not in valores_permitidos:
+                                skip = True
+                                break
+                    if skip:
+                        discarded += 1
+                        continue
                 
                 # --- PASO 3: INSERCION DE NUEVOS ---
                 objs_to_insert.append({"data_json": safe_json_dumps(row)})
@@ -919,9 +916,8 @@ def get_filtered_projects(only_cerradas=False):
     resultado = []
     hoy = datetime.now()
     
-    # Criterios para Cerradas (Normalizados a Mayúsculas para comparación robusta)
-    ESTADOS_CERRADAS = ['CERRADO', 'CERTIFICADO', 'CANCELADO', 'SUSPENDIDO', 'TRUNCO']
-    SUBESTADOS_TRUNCO_CERRADAS = ['CERTIFICADO', 'TRUNCO', 'EN CERTIFICACIÓN', 'DISEÑO EJECUTADO', 'CANCELADO']
+    # Obtener Estados Permitidos (Filtro Maestro) para Separación Dinámica
+    estados_permitidos = [str(f.valor).strip().upper() for f in FiltroMaestro.query.filter_by(entidad='ESTADO PLAN').all()]
 
     for row in res_proxy:
         try:
@@ -929,14 +925,11 @@ def get_filtered_projects(only_cerradas=False):
             data = json.loads(row[1])
             data = augment_virtual_columns(data, mapeos, configs)
             
-            # Lógica de separación Proyectos vs Cerradas
+            # Separación Dinámica: Proyectos vs Cerradas
             estado_plan = str(data.get('ESTADO PLAN', '')).strip().upper()
-            subestado_trunco = str(data.get('SUBESTADO TRUNCO', '')).strip().upper()
-            
             is_cerrada = False
-            if estado_plan in ['CERRADO', 'CERTIFICADO', 'CANCELADO', 'SUSPENDIDO']:
-                is_cerrada = True
-            elif estado_plan == 'TRUNCO' and subestado_trunco in SUBESTADOS_TRUNCO_CERRADAS:
+            
+            if estados_permitidos and (estado_plan not in estados_permitidos):
                 is_cerrada = True
                 
             if only_cerradas and not is_cerrada: continue
@@ -952,20 +945,6 @@ def get_filtered_projects(only_cerradas=False):
                         break
             if skip: continue
 
-            # Criterio de Año para Cerradas (2026 en adelante)
-            if only_cerradas:
-                fecha_creacion = data.get('FECHA CREACION IP')
-                year_ip = None
-                if fecha_creacion:
-                    for fmt in ("%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y", "%m/%d/%Y"):
-                        try:
-                            year_ip = datetime.strptime(str(fecha_creacion).strip(), fmt).year
-                            break
-                        except: continue
-                
-                # Si es Cerrada pero el año es anterior a 2026, la omitimos de la vista
-                if year_ip and year_ip < 2026:
-                    continue
 
             data['__db_id'] = oid
             
@@ -1005,60 +984,6 @@ def get_proyectos():
 @login_required
 def get_cerradas():
     return jsonify(get_filtered_projects(only_cerradas=True))
-
-@app.route('/api/admin/consolidar-2026', methods=['POST'])
-@admin_required
-def consolidar_cerradas():
-    """Elimina permanentemente de la DB registros cerrados anteriores al 2026."""
-    deleted_count = 0
-    
-    # Criterios para Cerradas
-    SUBESTADOS_TRUNCO_CERRADAS = ['CERTIFICADO', 'TRUNCO', 'EN CERTIFICACIÓN', 'DISEÑO EJECUTADO', 'CANCELADO']
-    
-    # SQLite direct fetch para minimizar RAM
-    q = text("SELECT id, data_json FROM gestion_obras")
-    res_proxy = db.session.execute(q)
-    ids_to_delete = []
-
-    for row in res_proxy:
-        try:
-            oid = row[0]
-            data = json.loads(row[1])
-            estado_plan = str(data.get('ESTADO PLAN', '')).strip().upper()
-            subestado_trunco = str(data.get('SUBESTADO TRUNCO', '')).strip().upper()
-            
-            is_cerrada = False
-            if estado_plan in ['CERRADO', 'CERTIFICADO', 'CANCELADO', 'SUSPENDIDO']:
-                is_cerrada = True
-            elif estado_plan == 'TRUNCO' and subestado_trunco in SUBESTADOS_TRUNCO_CERRADAS:
-                is_cerrada = True
-            
-            if is_cerrada:
-                fecha_creacion = data.get('FECHA CREACION IP')
-                year_ip = None
-                if fecha_creacion:
-                    for fmt in ("%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y", "%m/%d/%Y"):
-                        try:
-                            year_ip = datetime.strptime(str(fecha_creacion).strip(), fmt).year
-                            break
-                        except: continue
-                
-                if year_ip and year_ip < 2026:
-                    ids_to_delete.append(oid)
-        except: continue
-        
-    if ids_to_delete:
-        # Batch delete en SQLite
-        for i in range(0, len(ids_to_delete), 500):
-            batch = ids_to_delete[i:i+500]
-            db.session.execute(
-                GestionObra.__table__.delete().where(GestionObra.id.in_(batch))
-            )
-            deleted_count += len(batch)
-
-        
-    db.session.commit()
-    return jsonify({"success": True, "deleted": deleted_count})
 
 @app.route('/api/proyectos/clear', methods=['POST'])
 def clear_proyectos():

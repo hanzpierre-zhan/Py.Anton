@@ -6,8 +6,8 @@
         class="w-52 bg-[#181b21] border-r border-[#30363d] flex-shrink-0 flex flex-col relative transition-all duration-300 shadow-xl">
         <div class="p-4 border-b border-[#30363d] flex items-center justify-between bg-[#181b21] sticky top-0 z-10">
             <div>
-                <h2 class="text-3xl font-black tracking-tight text-white uppercase italic">Cerradas</h2>
-                <p class="text-xs text-[#8a8f98] font-bold uppercase tracking-widest mt-1">Historial 2026+ <span
+                <h2 class="text-xs font-black text-white tracking-tight uppercase">Filtros</h2>
+                <p class="text-[9px] font-bold text-[#8a8f98] uppercase tracking-widest mt-0.5">Maestros <span
                         id="virtualFilterCount"
                         class="ml-1 px-1 py-0.5 bg-[#21262d] rounded-none text-[#60a5fa]">0</span></p>
             </div>
@@ -60,11 +60,10 @@
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <h1 class="text-base font-black text-white tracking-tight">Consolidado</h1>
+                        <h1 class="text-base font-black text-white tracking-tight">Cerradas</h1>
                         <span id="totalItems" class="text-[10px] font-black text-[#60a5fa] bg-[#21262d] border border-[#30363d] px-1.5 py-0.5 rounded-none shadow-sm hidden">0</span>
                     </div>
-                    <p class="text-[9px] font-bold text-[#8a8f98] uppercase tracking-widest leading-none mt-0.5">Gestión
-                        Centralizada Proyectos</p>
+                    <p class="text-[9px] font-bold text-[#8a8f98] uppercase tracking-widest leading-none mt-0.5">Proyectos No Activos</p>
                 </div>
             </div>
 
@@ -109,30 +108,6 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4">
-                        </path>
-                    </svg>
-                </button>
-                {% endif %}
-
-                {% if current_user and current_user.rol in ['Admin', 'Administrador'] %}
-                <div class="h-8 w-px bg-[#21262d] mx-1"></div>
-
-                <button onclick="confirmConsolidar()"
-                    class="p-2.5 hover:bg-[#3b82f6]/10 text-[#3b82f6] hover:text-[#60a5fa] rounded-none transition-all border border-transparent hover:border-[#3b82f6]/20"
-                    title="Consolidar (Eliminar Cerradas < 2026)">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
-                        </path>
-                    </svg>
-                </button>
-
-                <button onclick="confirmClear()"
-                    class="p-2.5 hover:bg-rose-500/10 text-rose-500 hover:text-rose-400 rounded-none transition-all border border-transparent hover:border-rose-500/20"
-                    title="Limpiar Base de Datos">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
                         </path>
                     </svg>
                 </button>
@@ -314,45 +289,7 @@
         </div>
     </div>
 
-    <!-- Modal Confirmar Limpieza -->
-    <div id="clearModal"
-        class="absolute inset-0 bg-[#0e1116]/80  flex justify-end hidden pointer-events-auto p-4 transition-all overflow-hidden">
-        <div
-            class="bg-[#21262d] w-full max-w-sm h-full rounded-none shadow-2xl flex flex-col overflow-hidden animate-slide-left border-l border-[#30363d]">
-            <div class="p-8 border-b border-[#30363d] flex items-center justify-between bg-[#21262d] shrink-0">
-                <h3 class="text-xl font-black text-white">Limpieza</h3>
-                <button onclick="$('#clearModal').addClass('hidden').removeClass('flex')"
-                    class="p-2 hover:bg-[#30363d] rounded-none text-[#8a8f98] hover:text-white transition-all">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                            d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            <div class="p-10 flex-1 flex flex-col items-center justify-center text-center space-y-6">
-                <div
-                    class="w-24 h-24 bg-rose-500/10 text-rose-500 rounded-full flex items-center justify-center animate-bounce">
-                    <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                        </path>
-                    </svg>
-                </div>
-                <div>
-                    <h4 class="text-2xl font-black text-white">¿Estás seguro?</h4>
-                    <p class="text-sm text-[#8a8f98] font-medium mt-2 px-4">Esta acción eliminará todos los proyectos de
-                        forma permanente.</p>
-                </div>
-                <div class="w-full space-y-3 pt-6">
-                    <button onclick="executeClear()"
-                        class="w-full py-4 bg-rose-500 text-white rounded-none font-black text-sm shadow-xl shadow-rose-900/20 hover:bg-rose-600 transition-all">Eliminar
-                        todo ahora</button>
-                    <button onclick="$('#clearModal').addClass('hidden').removeClass('flex')"
-                        class="w-full py-4 text-[#8a8f98] font-bold text-sm">Mantener datos</button>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Modal Bitácora / Edición Manual (Alineado con Py.Anton) -->
     <div id="editManualModal" class="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center hidden p-4 pointer-events-auto">
@@ -754,14 +691,20 @@
             const fetches = [
                 { name: 'Columnas Manuales', url: '/api/config/manual-columns' },
                 { name: 'Mapeos', url: '/api/config/mapeos' },
-                { name: 'Proyectos Cerrados', url: '/api/cerradas' },
+                { name: 'Proyectos', url: '/api/cerradas' },
                 { name: 'Filtros', url: '/api/config/filtros' }
             ];
 
             const results = await Promise.all(fetches.map(async f => {
                 const res = await fetch(f.url);
                 if (!res.ok) {
-                    throw new Error(`${f.name}: Error ${res.status} al obtener datos`);
+                    let errorTrace = "";
+                    try {
+                        const errData = await res.json();
+                        if (errData.trace) errorTrace = "\\n\\nDetalle:\\n" + errData.trace;
+                        else if (errData.message) errorTrace = "\\n\\nDetalle:\\n" + errData.message;
+                    } catch (e) {}
+                    throw new Error(`${f.name}: Error ${res.status} al obtener datos${errorTrace}`);
                 }
                 const text = await res.text();
                 try {
@@ -792,27 +735,7 @@
             console.log("DEBUG: Manual Fields Loaded:", manualFields);
             console.log("DEBUG: rawData sample:", rawData[0]);
 
-            // Mapeo de columnas virtuales
-            if (rawData.length > 0) {
-                rawData.forEach(row => {
-                    vCols.forEach(vc => {
-                        row[vc] = "";
-                        // Recorremos todos los mapeos para esta columna virtual
-                        mapeos.forEach(m => {
-                            const valCriterio = String(row[m.columna_criterio] || '').trim();
-                            if (valCriterio === String(m.valor_criterio).trim()) {
-                                // Verificar si este criterio permite esta columna virtual
-                                const cfg = filterConfigs[m.columna_criterio];
-                                const allowedCols = (cfg && cfg.virtual_cols) || [];
-
-                                if (allowedCols.includes(vc) && m.valores && m.valores[vc]) {
-                                    row[vc] = m.valores[vc];
-                                }
-                            }
-                        });
-                    });
-                });
-            }
+            // Las columnas virtuales ya vienen mapeadas desde el backend gracias a augment_virtual_columns()
 
             console.log("DEBUG: Virtual Columns populated:", vCols);
             if (rawData.length > 0) console.log("DEBUG: Sample row with VCols:", rawData[0]);
@@ -1628,28 +1551,6 @@
         closeAllModals();
         $('#clearModal').removeClass('hidden').addClass('flex');
     }
-    function confirmConsolidar() {
-        if (confirm("¿Estás seguro de que deseas ELIMINAR permanentEMENTE todos los registros cerrados ANTERIORES al 2026? Esta acción no se puede deshacer.")) {
-            executeConsolidar();
-        }
-    }
-
-    async function executeConsolidar() {
-        try {
-            const res = await fetch('/api/admin/consolidar-2026', { method: 'POST' });
-            const data = await res.json();
-            if (data.success) {
-                alert(`Consolidación completada. Se eliminaron ${data.deleted} registros antiguos.`);
-                loadData();
-            } else {
-                alert("Error al consolidar: " + (data.message || 'Error desconocido'));
-            }
-        } catch (e) {
-            console.error(e);
-            alert("Error de conexión al servidor");
-        }
-    }
-
     async function executeClear() {
         await fetch('/api/proyectos/clear', { method: 'POST' });
         location.reload();
@@ -1756,4 +1657,3 @@
     });
 </script>
 {% endblock %}
-{% block title %}Cerradas{% endblock %}

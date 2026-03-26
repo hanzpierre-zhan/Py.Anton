@@ -788,27 +788,7 @@
             console.log("DEBUG: Manual Fields Loaded:", manualFields);
             console.log("DEBUG: rawData sample:", rawData[0]);
 
-            // Mapeo de columnas virtuales
-            if (rawData.length > 0) {
-                rawData.forEach(row => {
-                    vCols.forEach(vc => {
-                        row[vc] = "";
-                        // Recorremos todos los mapeos para esta columna virtual
-                        mapeos.forEach(m => {
-                            const valCriterio = String(row[m.columna_criterio] || '').trim();
-                            if (valCriterio === String(m.valor_criterio).trim()) {
-                                // Verificar si este criterio permite esta columna virtual
-                                const cfg = filterConfigs[m.columna_criterio];
-                                const allowedCols = (cfg && cfg.virtual_cols) || [];
-
-                                if (allowedCols.includes(vc) && m.valores && m.valores[vc]) {
-                                    row[vc] = m.valores[vc];
-                                }
-                            }
-                        });
-                    });
-                });
-            }
+            // Las columnas virtuales ya vienen mapeadas desde el backend gracias a augment_virtual_columns()
 
             console.log("DEBUG: Virtual Columns populated:", vCols);
             if (rawData.length > 0) console.log("DEBUG: Sample row with VCols:", rawData[0]);
