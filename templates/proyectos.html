@@ -1584,11 +1584,40 @@
     }
 
     async function exportToExcel() {
+        if (!table) return;
+        
+        // 1. Obtener columnas visibles
+        const visibleCols = [];
+        table.columns().every(function () {
+            if (this.visible()) {
+                const name = this.dataSrc();
+                if (typeof name === 'string' && !name.startsWith('__')) {
+                    visibleCols.push(name);
+                }
+            }
+        });
+        
+        // 2. Obtener nombres de columnas manuales
+        const manualColNames = manualFields ? manualFields.map(f => f.nombre) : [];
+        
+        // 3. Unir ambos conservando orden y sin duplicidades
+        const exportCols = [...new Set([...visibleCols, ...manualColNames])];
+        
         const filteredData = table.rows({ filter: 'applied' }).data().toArray();
+        
+        // 4. Filtrar cada fila a solo las columnas especificadas
+        const exportData = filteredData.map(row => {
+            const newRow = {};
+            exportCols.forEach(col => {
+                newRow[col] = (row[col] !== undefined && row[col] !== null) ? row[col] : '';
+            });
+            return newRow;
+        });
+
         const res = await fetch('/api/proyectos/export', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(filteredData)
+            body: JSON.stringify(exportData)
         });
         const blob = await res.blob();
         const url = window.URL.createObjectURL(blob);
