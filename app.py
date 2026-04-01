@@ -524,7 +524,7 @@ def process_import():
         filtros_dict = {}
         if filter_active:
             for f in FiltroMaestro.query.all():
-                e, v = f.entidad.strip(), f.valor.strip()
+                e, v = f.entidad.strip().upper(), f.valor.strip().upper()
                 if e not in filtros_dict: filtros_dict[e] = []
                 filtros_dict[e].append(v)
 
@@ -606,11 +606,11 @@ def process_import():
                 if filter_active:
                     skip = False
                     for entidad, valores_permitidos in filtros_dict.items():
-                        if entidad in row:
-                            val_fila = str(row.get(entidad, "")).strip()
-                            if val_fila and val_fila not in valores_permitidos:
-                                skip = True
-                                break
+                        # Las llaves de row ya vienen en UPPER por get_rows_iter
+                        val_fila = str(row.get(entidad, "")).strip().upper()
+                        if val_fila and val_fila not in valores_permitidos:
+                            skip = True
+                            break
                     if skip:
                         discarded += 1
                         continue
