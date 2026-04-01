@@ -42,17 +42,23 @@
             <div class="ios-card p-8 overflow-x-auto custom-scrollbar bg-[#0e1116] border-[#30363d] border-b-0 rounded-t-lg">
                 <div id="pipelineMantCobra" class="flex items-center justify-start min-w-max"></div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-[#181b21] p-6 border border-[#30363d] rounded-b-lg">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 bg-[#181b21] p-6 border border-[#30363d] rounded-b-lg">
                 <div class="flex flex-col">
                     <div class="text-[9px] font-black uppercase text-[#8a8f98] mb-4 tracking-widest flex items-center gap-1.5"><svg class="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg> CASUÍSTICA</div>
                     <div class="relative w-full flex-1 min-h-[220px]">
                         <canvas id="casMantCobra"></canvas>
                     </div>
                 </div>
-                <div class="flex flex-col text-right md:text-left">
-                    <div class="text-[9px] font-black uppercase text-[#8a8f98] mb-4 tracking-widest flex items-center md:justify-start justify-end gap-1.5"><svg class="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg> ESTADO DE LA OBRA</div>
+                <div class="flex flex-col text-right lg:text-left">
+                    <div class="text-[9px] font-black uppercase text-[#8a8f98] mb-4 tracking-widest flex items-center lg:justify-start justify-end gap-1.5"><svg class="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg> ESTADO DE LA OBRA</div>
                     <div class="relative w-full flex-1 min-h-[220px]">
                         <canvas id="estMantCobra"></canvas>
+                    </div>
+                </div>
+                <div class="flex flex-col text-right lg:text-left">
+                    <div class="text-[9px] font-black uppercase text-[#8a8f98] mb-4 tracking-widest flex items-center lg:justify-start justify-end gap-1.5"><svg class="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg> TIPO DE OBRA</div>
+                    <div class="relative w-full flex-1 min-h-[220px]">
+                        <canvas id="tipoMantCobra"></canvas>
                     </div>
                 </div>
             </div>
@@ -70,17 +76,23 @@
             <div class="ios-card p-8 overflow-x-auto custom-scrollbar bg-[#0e1116] border-[#30363d] border-b-0 rounded-t-lg">
                 <div id="pipelineMantIntegratel" class="flex items-center justify-start min-w-max"></div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-[#181b21] p-6 border border-[#30363d] rounded-b-lg">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 bg-[#181b21] p-6 border border-[#30363d] rounded-b-lg">
                 <div class="flex flex-col">
                     <div class="text-[9px] font-black uppercase text-[#8a8f98] mb-4 tracking-widest flex items-center gap-1.5"><svg class="w-3 h-3 text-lime-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg> CASUÍSTICA</div>
                     <div class="relative w-full flex-1 min-h-[220px]">
                         <canvas id="casMantIntegratel"></canvas>
                     </div>
                 </div>
-                <div class="flex flex-col text-right md:text-left">
-                    <div class="text-[9px] font-black uppercase text-[#8a8f98] mb-4 tracking-widest flex items-center md:justify-start justify-end gap-1.5"><svg class="w-3 h-3 text-lime-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg> ESTADO DE LA OBRA</div>
+                <div class="flex flex-col text-right lg:text-left">
+                    <div class="text-[9px] font-black uppercase text-[#8a8f98] mb-4 tracking-widest flex items-center lg:justify-start justify-end gap-1.5"><svg class="w-3 h-3 text-lime-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg> ESTADO DE LA OBRA</div>
                     <div class="relative w-full flex-1 min-h-[220px]">
                         <canvas id="estMantIntegratel"></canvas>
+                    </div>
+                </div>
+                <div class="flex flex-col text-right lg:text-left">
+                    <div class="text-[9px] font-black uppercase text-[#8a8f98] mb-4 tracking-widest flex items-center lg:justify-start justify-end gap-1.5"><svg class="w-3 h-3 text-lime-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg> TIPO DE OBRA</div>
+                    <div class="relative w-full flex-1 min-h-[220px]">
+                        <canvas id="tipoMantIntegratel"></canvas>
                     </div>
                 </div>
             </div>
@@ -108,17 +120,23 @@
             <div class="ios-card p-8 overflow-x-auto custom-scrollbar bg-[#0e1116] border-[#30363d] border-b-0 rounded-t-lg">
                 <div id="pipelineIngCobra" class="flex items-center justify-start min-w-max"></div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-[#181b21] p-6 border border-[#30363d] rounded-b-lg">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 bg-[#181b21] p-6 border border-[#30363d] rounded-b-lg">
                 <div class="flex flex-col">
                     <div class="text-[9px] font-black uppercase text-[#8a8f98] mb-4 tracking-widest flex items-center gap-1.5"><svg class="w-3 h-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg> CASUÍSTICA</div>
                     <div class="relative w-full flex-1 min-h-[220px]">
                         <canvas id="casIngCobra"></canvas>
                     </div>
                 </div>
-                <div class="flex flex-col text-right md:text-left">
-                    <div class="text-[9px] font-black uppercase text-[#8a8f98] mb-4 tracking-widest flex items-center md:justify-start justify-end gap-1.5"><svg class="w-3 h-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg> ESTADO DE LA OBRA</div>
+                <div class="flex flex-col text-right lg:text-left">
+                    <div class="text-[9px] font-black uppercase text-[#8a8f98] mb-4 tracking-widest flex items-center lg:justify-start justify-end gap-1.5"><svg class="w-3 h-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg> ESTADO DE LA OBRA</div>
                     <div class="relative w-full flex-1 min-h-[220px]">
                         <canvas id="estIngCobra"></canvas>
+                    </div>
+                </div>
+                <div class="flex flex-col text-right lg:text-left">
+                    <div class="text-[9px] font-black uppercase text-[#8a8f98] mb-4 tracking-widest flex items-center lg:justify-start justify-end gap-1.5"><svg class="w-3 h-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg> TIPO DE OBRA</div>
+                    <div class="relative w-full flex-1 min-h-[220px]">
+                        <canvas id="tipoIngCobra"></canvas>
                     </div>
                 </div>
             </div>
@@ -136,17 +154,23 @@
             <div class="ios-card p-8 overflow-x-auto custom-scrollbar bg-[#0e1116] border-[#30363d] border-b-0 rounded-t-lg">
                 <div id="pipelineIngIntegratel" class="flex items-center justify-start min-w-max"></div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-[#181b21] p-6 border border-[#30363d] rounded-b-lg">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 bg-[#181b21] p-6 border border-[#30363d] rounded-b-lg">
                 <div class="flex flex-col">
                     <div class="text-[9px] font-black uppercase text-[#8a8f98] mb-4 tracking-widest flex items-center gap-1.5"><svg class="w-3 h-3 text-lime-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg> CASUÍSTICA</div>
                     <div class="relative w-full flex-1 min-h-[220px]">
                         <canvas id="casIngIntegratel"></canvas>
                     </div>
                 </div>
-                <div class="flex flex-col text-right md:text-left">
-                    <div class="text-[9px] font-black uppercase text-[#8a8f98] mb-4 tracking-widest flex items-center md:justify-start justify-end gap-1.5"><svg class="w-3 h-3 text-lime-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg> ESTADO DE LA OBRA</div>
+                <div class="flex flex-col text-right lg:text-left">
+                    <div class="text-[9px] font-black uppercase text-[#8a8f98] mb-4 tracking-widest flex items-center lg:justify-start justify-end gap-1.5"><svg class="w-3 h-3 text-lime-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg> ESTADO DE LA OBRA</div>
                     <div class="relative w-full flex-1 min-h-[220px]">
                         <canvas id="estIngIntegratel"></canvas>
+                    </div>
+                </div>
+                <div class="flex flex-col text-right lg:text-left">
+                    <div class="text-[9px] font-black uppercase text-[#8a8f98] mb-4 tracking-widest flex items-center lg:justify-start justify-end gap-1.5"><svg class="w-3 h-3 text-lime-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg> TIPO DE OBRA</div>
+                    <div class="relative w-full flex-1 min-h-[220px]">
+                        <canvas id="tipoIngIntegratel"></canvas>
                     </div>
                 </div>
             </div>
@@ -259,9 +283,11 @@
         // Render Casuisticas y Estados
         renderCasuisticaChart('casMantCobra', groups.mantCobra, 'blue');
         renderEstadoChart('estMantCobra', groups.mantCobra, 'blue');
+        renderTipoObraChart('tipoMantCobra', groups.mantCobra, 'blue');
 
         renderCasuisticaChart('casMantIntegratel', groups.mantIntegratel, 'lime');
         renderEstadoChart('estMantIntegratel', groups.mantIntegratel, 'lime');
+        renderTipoObraChart('tipoMantIntegratel', groups.mantIntegratel, 'lime');
 
         const filterExemptIng = (data) => data.filter(p => {
             const s = String(p['ESTADO PLAN'] || '').toUpperCase();
@@ -270,9 +296,11 @@
 
         renderCasuisticaChart('casIngCobra', filterExemptIng(groups.ingCobra), 'indigo');
         renderEstadoChart('estIngCobra', filterExemptIng(groups.ingCobra), 'indigo');
+        renderTipoObraChart('tipoIngCobra', filterExemptIng(groups.ingCobra), 'indigo');
 
         renderCasuisticaChart('casIngIntegratel', filterExemptIng(groups.ingIntegratel), 'lime');
         renderEstadoChart('estIngIntegratel', filterExemptIng(groups.ingIntegratel), 'lime');
+        renderTipoObraChart('tipoIngIntegratel', filterExemptIng(groups.ingIntegratel), 'lime');
     }
 
     function renderPipeline(containerId, data, themeColor, isIng) {
@@ -477,6 +505,86 @@
         const baseColors = [
             colorMap[themeStr].base, 
             '#f59e0b', '#ec4899', '#06b6d4', '#10b981', '#8b5cf6', '#a855f7', '#14b8a6', '#f43f5e', '#64748b'
+        ];
+
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        dashboardCharts[canvasId] = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: baseColors.slice(0, values.length),
+                    borderColor: '#181b21',
+                    borderWidth: 3,
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            color: '#8a8f98',
+                            font: { size: 10, family: 'Inter', weight: 'bold' },
+                            boxWidth: 10,
+                            padding: 10
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#181b21',
+                        titleColor: '#8a8f98',
+                        bodyColor: '#ffffff',
+                        borderColor: '#30363d',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                return formatNumber(context.raw);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderTipoObraChart(canvasId, data, themeStr) {
+        if (dashboardCharts[canvasId]) {
+            dashboardCharts[canvasId].destroy();
+        }
+
+        const stats = {};
+        data.forEach(p => {
+            let st = String(p['TIPO DE OBRA'] || '').trim();
+            if(!st || st.toUpperCase() === 'NAN' || st === 'NONE') st = 'SIN TIPO';
+            st = st.toUpperCase();
+            if(!stats[st]) stats[st] = { sum: 0, count: 0 };
+            stats[st].sum += (parseFloat(p['VALORIZ MANO DE OBRA']) || 0);
+            stats[st].count += 1;
+        });
+
+        const entries = Object.entries(stats).sort((a,b) => b[1].sum - a[1].sum);
+        if (entries.length === 0) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            ctx.clearRect(0,0,300,180);
+            ctx.font = 'bold 11px Inter';
+            ctx.fillStyle = '#8a8f98';
+            ctx.fillText('Sin datos de tipo de obra', 10, 20);
+            return;
+        }
+
+        const labels = entries.map(e => {
+            let name = e[0].length > 20 ? e[0].substring(0, 20) + '...' : e[0];
+            return `${name} (${e[1].count})`;
+        });
+        const values = entries.map(e => e[1].sum);
+
+        const baseColors = [
+            colorMap[themeStr].base, 
+            '#06b6d4', '#ec4899', '#f59e0b', '#10b981', '#a855f7', '#8b5cf6', '#14b8a6', '#f43f5e', '#64748b'
         ];
 
         const ctx = document.getElementById(canvasId).getContext('2d');
