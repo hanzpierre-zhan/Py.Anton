@@ -624,6 +624,12 @@ def process_import():
                         # Las llaves de row ya vienen en UPPER por get_rows_iter
                         val_fila = str(row.get(entidad, "")).strip().upper()
                         if val_fila and val_fila not in valores_permitidos:
+                            # EL FILTRO DE SUBESTADO TRUNCO SOLO APLICA SI EL ESTADO PLAN ES 'TRUNCO'
+                            if entidad == 'SUBESTADO TRUNCO':
+                                estado_plan_val = str(row.get('ESTADO PLAN', '')).strip().upper()
+                                if estado_plan_val != 'TRUNCO':
+                                    continue # Pasar al siguiente filtro maestro sin descartar
+                            
                             skip = True
                             break
                     if skip:
