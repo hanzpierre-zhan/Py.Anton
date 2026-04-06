@@ -137,8 +137,17 @@ from functools import wraps
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if 'user_id' not in session:
+        user_id = session.get('user_id')
+        if not user_id:
             return redirect(url_for('route_login'))
+            
+        # Verificar que el usuario aún exista en la base de datos
+        # Esto previene "Ghost Sessions" en Render tras reinicios de SQLite
+        u = db.session.get(Usuario, user_id)
+        if not u:
+            session.clear()
+            return redirect(url_for('route_login'))
+            
         return f(*args, **kwargs)
     return decorated
 
@@ -171,9 +180,15 @@ def inject_current_user():
     """Inyecta current_user en todos los templates."""
     user_id = session.get('user_id')
     if user_id:
-        u = db.session.get(Usuario, user_id)
-        if u:
-            return {'current_user': {'id': u.id, 'usuario': u.usuario, 'nombres': u.nombres, 'rol': u.rol}}
+        try:
+            u = db.session.get(Usuario, user_id)
+            if u:
+                return {'current_user': {'id': u.id, 'usuario': u.usuario, 'nombres': u.nombres, 'rol': u.rol}}
+            else:
+                # Si hay ID en sesion pero no en DB, limpiamos para evitar inconsistencias
+                session.clear()
+        except:
+            pass
     return {'current_user': None}
 
 # --- RUTAS DE NAVEGACIÓN ---
