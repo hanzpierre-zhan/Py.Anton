@@ -79,6 +79,15 @@
                     </svg>
                     EXCEL
                 </button>
+                
+                <div class="h-8 w-px bg-[#21262d] mx-1"></div>
+                <button id="btnPendingManual" onclick="togglePendingManual()"
+                    class="p-2.5 hover:bg-[#21262d] text-[#8a8f98] hover:text-amber-500 rounded-none transition-all border border-transparent hover:border-[#30363d] group"
+                    title="Filtrar Pendientes en Columnas Manuales">
+                    <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                </button>
                 {% if current_user and current_user.rol in ['Admin', 'Administrador'] %}
                 <div class="h-8 w-px bg-[#21262d] mx-1"></div>
 
@@ -1735,6 +1744,47 @@
                 $('.dataTables_scrollHead').scrollLeft($(this).scrollLeft());
             });
         }
+    }
+
+    let isShowingPendingManual = false;
+    function togglePendingManual() {
+        isShowingPendingManual = !isShowingPendingManual;
+        const btn = $('#btnPendingManual');
+        if (isShowingPendingManual) {
+            btn.css({ 'background-color': '#f59e0b', 'color': '#ffffff', 'border-color': '#f59e0b' }).removeClass('text-[#8a8f98] hover:bg-[#21262d] hover:text-amber-500 hover:border-[#30363d]');
+            $.fn.dataTable.ext.search.push(pendingManualFilter);
+        } else {
+            btn.css({ 'background-color': '', 'color': '', 'border-color': '' }).addClass('text-[#8a8f98] hover:bg-[#21262d] hover:text-amber-500 hover:border-[#30363d]');
+            const index = $.fn.dataTable.ext.search.indexOf(pendingManualFilter);
+            if (index > -1) {
+                $.fn.dataTable.ext.search.splice(index, 1);
+            }
+        }
+        if(table) table.draw();
+    }
+
+    function pendingManualFilter(settings, data, dataIndex, rowData) {
+        if (!manualFields || manualFields.length === 0) return true;
+        
+        let hasVisibleManualCols = false;
+        let missingSome = false;
+        
+        for (let i = 0; i < manualFields.length; i++) {
+            const fUpper = String(manualFields[i].nombre).trim().toUpperCase();
+            const colDef = settings.aoColumns.find(c => c.name && c.name.trim().toUpperCase() === fUpper);
+            
+            if (colDef && colDef.bVisible) {
+                hasVisibleManualCols = true;
+                const actualKey = Object.keys(rowData).find(k => String(k).trim().toUpperCase() === fUpper);
+                let val = actualKey ? rowData[actualKey] : undefined;
+                if (val === undefined || val === null || String(val).trim() === '') {
+                    missingSome = true;
+                }
+            }
+        }
+        
+        if (!hasVisibleManualCols) return true;
+        return missingSome;
     }
 
     $(document).ready(() => {

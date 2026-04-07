@@ -212,7 +212,7 @@
             },
             scales: isDonut ? {} : {
                 x: { ticks: { color: '#8a8f98', font: { size: 8 } }, grid: { display: false } },
-                y: { ticks: { color: '#8a8f98', font: { size: 8 } }, grid: { color: '#30363d' } }
+                y: { ticks: { color: '#8a8f98', font: { size: 8 } }, grid: { display: false } }
             }
         };
 
@@ -226,7 +226,7 @@
                     data: data,
                     backgroundColor: isDonut ? baseColors : 'rgba(244, 63, 94, 0.4)',
                     borderColor: isDonut ? '#181b21' : '#f43f5e',
-                    borderWidth: 2,
+                    borderWidth: isDonut ? 0 : 2,
                     borderRadius: 4
                 }]
             },

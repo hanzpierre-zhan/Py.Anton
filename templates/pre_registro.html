@@ -235,7 +235,7 @@
             },
             scales: isDonut ? {} : {
                 x: { ticks: { color: '#8a8f98', font: { size: 9 } }, grid: { display: false } },
-                y: { ticks: { color: '#8a8f98', font: { size: 9 } }, grid: { color: '#30363d' } }
+                y: { ticks: { color: '#8a8f98', font: { size: 9 } }, grid: { display: false } }
             }
         };
 
@@ -252,7 +252,7 @@
                     data: data,
                     backgroundColor: isDonut ? themeColors : (type === 'bar' ? bgColor : themeColors),
                     borderColor: isDonut ? '#181b21' : mainColor,
-                    borderWidth: isDonut ? 2 : 2,
+                    borderWidth: isDonut ? 0 : 2,
                     borderRadius: type === 'bar' ? 4 : 0,
                     cutout: isDonut ? '70%' : 0
                 }]

@@ -217,9 +217,84 @@
             border: 2px solid #0e1116;
         }
  
-        ::-webkit-scrollbar-thumb:hover {
-            background: #4b5563;
+        /* Theme Claro: Override de Tailwind hardcoded colors */
+        body.light-theme {
+            --ios-bg: #f3f2f1;
+            --ios-card: #ffffff;
+            --ios-text: #212529;
+            --ios-border: #e1dfdd;
+            background-color: var(--ios-bg) !important;
+            color: var(--ios-text) !important;
         }
+        
+        /* Nav Header Azul Logo */
+        .light-theme nav.bg-\[\#181b21\] { background-color: #2563eb !important; border-bottom: none !important; }
+        .light-theme nav.bg-\[\#181b21\] .text-white, .light-theme nav.bg-\[\#181b21\] .text-\[\#8a8f98\] { color: #ffffff !important; }
+        .light-theme nav.bg-\[\#181b21\] .bg-\[\#21262d\] { background-color: rgba(255,255,255,0.15) !important; border-color: rgba(255,255,255,0.2) !important; color: #fff !important; }
+        .light-theme nav.bg-\[\#181b21\] .bg-\[\#0e1116\] { background-color: #1d4ed8 !important; border-color: transparent !important; }
+        .light-theme nav.bg-\[\#181b21\] #themeToggleBtn { background-color: rgba(255,255,255,0.2) !important; border-color: transparent !important; color: #fff !important; }
+
+        /* Background overrides */
+        .light-theme .bg-\[\#0e1116\] { background-color: var(--ios-bg) !important; }
+        .light-theme .bg-\[\#181b21\] { background-color: var(--ios-card) !important; }
+        .light-theme .bg-\[\#21262d\] { background-color: #ffffff !important; }
+        .light-theme .bg-\[\#30363d\] { background-color: #e1dfdd !important; }
+        
+        /* Specific panels */
+        .light-theme .bg-slate-800 { background-color: #ffffff !important; border-color: #e1dfdd !important;}
+        .light-theme .bg-slate-900 { background-color: #f3f2f1 !important; border-color: #e1dfdd !important;}
+        .light-theme .bg-slate-700 { background-color: #e1dfdd !important; border-color: #ced4da !important;}
+        
+        /* Border overrides */
+        .light-theme .border-\[\#30363d\] { border-color: var(--ios-border) !important; }
+        .light-theme .divide-\[\#30363d\] > :not([hidden]) ~ :not([hidden]) { border-color: var(--ios-border) !important; }
+        .light-theme .border-slate-700 { border-color: #e1dfdd !important; }
+        
+        /* Remove Gradients */
+        body.light-theme .bg-gradient-to-br { background-image: none !important; background-color: var(--ios-card) !important; }
+        
+        /* Text overrides */
+        .light-theme .text-white, .light-theme .text-slate-50, .light-theme .text-slate-100 { color: var(--ios-text) !important; }
+        .light-theme .text-\[\#c9d1d9\], .light-theme .text-slate-200, .light-theme .text-slate-300 { color: #323130 !important; }
+        .light-theme .text-\[\#8a8f98\], .light-theme .text-slate-400, .light-theme .text-slate-500 { color: #605e5c !important; }
+
+        /* Specific Table Overrides */
+        .light-theme table.dataTable { border-color: var(--ios-border) !important; }
+        body.light-theme table.dataTable thead th, body.light-theme #projectsTable th { 
+            background-color: #ffffff !important; 
+            color: #323130 !important; 
+            border-bottom: 2px solid var(--ios-border) !important; 
+            border-color: var(--ios-border) !important;
+        }
+        body.light-theme table.dataTable tbody td, body.light-theme #projectsTable td { 
+            background-color: var(--ios-card) !important; 
+            color: var(--ios-text) !important; 
+            border-color: var(--ios-border) !important;
+        }
+        body.light-theme .filter-row th { background-color: #f3f2f1 !important; }
+        body.light-theme .filter-input { 
+            background-color: #ffffff !important; 
+            border-color: #ced4da !important; 
+            color: #212529 !important; 
+        }
+        
+        /* Table tweaks */
+        body.light-theme .sticky-col-1, body.light-theme .sticky-col-2 {
+            background-color: var(--ios-card) !important;
+            border-right-color: var(--ios-border) !important;
+        }
+        body.light-theme thead .sticky-col-1, body.light-theme thead .sticky-col-2 {
+            background-color: #ffffff !important;
+            border-right-color: var(--ios-border) !important;
+        }
+        
+        /* Modals and alerts */
+        .light-theme #manualLongValue { background: #ffffff !important; border-color: #ced4da !important; color: #495057 !important; }
+        
+        /* Scrollbars in Light Theme */
+        .light-theme ::-webkit-scrollbar-track { background: var(--ios-bg); }
+        .light-theme ::-webkit-scrollbar-thumb { background: #ced4da; border: 2px solid var(--ios-bg); }
+        .light-theme ::-webkit-scrollbar-thumb:hover { background: #adb5bd; }
     </style>
 </head>
 
@@ -338,6 +413,14 @@
 
         <!-- Usuario en sesión + Logout -->
         <div class="flex items-center gap-3">
+            <!-- Theme Toggle -->
+            <button id="themeToggleBtn" class="p-1.5 mr-2 rounded-full bg-[#181b21] border border-[#30363d] text-[#8a8f98] hover:text-white hover:bg-[#21262d] transition-all shadow-sm" title="Cambiar Tema">
+                <!-- Sun Icon -->
+                <svg id="sunIcon" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <!-- Moon Icon -->
+                <svg id="moonIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+            
             {% if current_user %}
             <div class="text-right">
                 <p class="text-[10px] uppercase font-bold text-[#8a8f98]">{{ current_user.rol }}</p>
@@ -365,6 +448,38 @@
 
     <script>
         window.userRole = "{{ current_user.rol if current_user else '' }}";
+        
+        // Theme initialization
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const sunIcon = document.getElementById('sunIcon');
+        const moonIcon = document.getElementById('moonIcon');
+        
+        function setTheme(isLight) {
+            if (isLight) {
+                document.body.classList.add('light-theme');
+                if(sunIcon) sunIcon.classList.remove('hidden');
+                if(moonIcon) moonIcon.classList.add('hidden');
+                localStorage.setItem('anton_theme', 'light');
+            } else {
+                document.body.classList.remove('light-theme');
+                if(sunIcon) sunIcon.classList.add('hidden');
+                if(moonIcon) moonIcon.classList.remove('hidden');
+                localStorage.setItem('anton_theme', 'dark');
+            }
+        }
+        
+        if(themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                const isLight = document.body.classList.contains('light-theme');
+                setTheme(!isLight);
+            });
+        }
+        
+        // Initial load
+        const savedTheme = localStorage.getItem('anton_theme');
+        if (savedTheme === 'light') {
+            setTheme(true);
+        }
     </script>
     {% block scripts %}{% endblock %}
 </body>
