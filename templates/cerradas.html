@@ -92,7 +92,7 @@
                 </button>
                 {% endif %}
 
-                {% if current_user and current_user.rol in ['Admin', 'Administrador', 'Editor'] %}
+                {% if current_user and current_user.rol in ['Admin', 'Administrador', 'Editor', 'Visualizador'] %}
                 <button onclick="toggleOrderModal()"
                     class="p-2.5 hover:bg-[#21262d] text-[#8a8f98] hover:text-[#60a5fa] rounded-none transition-all border border-transparent hover:border-[#30363d]"
                     title="Reordenar Columnas">
@@ -1060,6 +1060,9 @@
             if (type === 'list') selectColor = 'bg-blue-900/50 text-blue-300 border-blue-800';
             if (type === 'date') selectColor = 'bg-emerald-900/50 text-emerald-300 border-emerald-800';
 
+            const userRoleClean = String(window.userRole || "").trim().toUpperCase();
+            const canEditGlobal = userRoleClean.includes('ADMIN') || userRoleClean.includes('EDITOR');
+
             list.append(`
                 <div class="flex items-center justify-between p-2 rounded-none border border-slate-700 hover:bg-slate-800 transition-all gap-2">
                     <label class="flex items-center gap-2 cursor-pointer flex-1 min-w-0">
@@ -1071,11 +1074,13 @@
                             <option class="bg-slate-900 text-slate-400" value="short" ${!isLong ? 'selected' : ''}>CORTO</option>
                             <option class="bg-slate-900 text-indigo-300" value="long" ${isLong ? 'selected' : ''}>LARGO</option>
                         </select>
+                        ${canEditGlobal ? `
                         <select onchange="changeFilterType('${name}', this.value)" class="text-[8px] font-black uppercase rounded-none border outline-none cursor-pointer py-1 px-1 appearance-none text-center ${selectColor} focus:ring-1 focus:ring-blue-500 transition-colors shadow-sm w-[60px]" title="Tipo de filtro">
                             <option class="bg-slate-900 text-slate-300" value="search" ${type === 'search' ? 'selected' : ''}>SEARCH</option>
                             <option class="bg-slate-900 text-blue-300" value="list" ${type === 'list' ? 'selected' : ''}>LIST</option>
                             <option class="bg-slate-900 text-emerald-300" value="date" ${type === 'date' ? 'selected' : ''}>DATE</option>
                         </select>
+                        ` : ''}
                     </div>
                 </div>
             `);
