@@ -240,6 +240,16 @@ def route_dashboard():
 def route_pdt_pago():
     return render_template('pdt_pago.html')
 
+@app.route('/pre_registro')
+@login_required
+def route_pre_registro():
+    return render_template('pre_registro.html')
+
+@app.route('/pdt_certificar')
+@login_required
+def route_pdt_certificar():
+    return render_template('pdt_certificar.html')
+
 @app.route('/cerradas')
 @login_required
 def route_cerradas():

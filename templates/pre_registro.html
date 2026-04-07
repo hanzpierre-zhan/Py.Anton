@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+
+{% block title %}Pre Registro{% endblock %}
+
+{% block content %}
+<div class="p-12 max-w-7xl mx-auto">
+    <div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+            <h2 class="text-4xl font-extrabold tracking-tight text-white uppercase">Pre Registro</h2>
+            <p class="text-lg font-medium text-[#8a8f98]">Proyectos de Mantenimiento en estado Pre Registro.</p>
+        </div>
+        
+        <div class="w-full md:w-auto flex flex-col md:flex-row items-end gap-4">
+            <div class="w-full md:w-56">
+                <label class="text-[10px] font-black uppercase text-[#8a8f98] mb-2 block flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#3b82f6]"></span> Filtrar por Jefatura
+                </label>
+                <select id="jefaturaFilter" class="w-full bg-[#181b21] border border-[#30363d] text-[#c9d1d9] rounded-md px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-[#3b82f6]/20 transition-all">
+                    <option value="ALL">TODAS LAS JEFATURAS</option>
+                </select>
+            </div>
+            <div class="w-full md:w-56">
+                <label class="text-[10px] font-black uppercase text-[#8a8f98] mb-2 block flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#f59e0b]"></span> Filtrar por Responsable
+                </label>
+                <select id="responsableFilter" class="w-full bg-[#181b21] border border-[#30363d] text-[#c9d1d9] rounded-md px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-[#f59e0b]/20 transition-all">
+                    <option value="ALL">TODOS</option>
+                    <option value="COBRA">COBRA</option>
+                    <option value="INTEGRATEL">INTEGRATEL</option>
+                </select>
+            </div>
+            <button onclick="clearAllFilters()" class="px-6 py-3 bg-[#181b21] border border-[#30363d] text-[#8a8f98] hover:text-white hover:border-[#4b5563] rounded-md text-[10px] font-black uppercase tracking-widest transition-all h-[46px]">
+                Limpiar Filtros
+            </button>
+        </div>
+    </div>
+
+    <!-- RESUMEN GLOBAL -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <div class="ios-card p-6 bg-gradient-to-br from-[#181b21] to-[#0e1116] border-[#30363d]">
+            <p class="text-[10px] font-black text-[#8a8f98] uppercase tracking-widest mb-1">Monto Total</p>
+            <h4 class="text-3xl font-black text-blue-500" id="totalAmount">S/ 0.00</h4>
+        </div>
+        <div class="ios-card p-6 bg-gradient-to-br from-[#181b21] to-[#0e1116] border-[#30363d]">
+            <p class="text-[10px] font-black text-[#8a8f98] uppercase tracking-widest mb-1">Total Proyectos</p>
+            <h4 class="text-3xl font-black text-white" id="totalCount">0</h4>
+        </div>
+        <div class="ios-card p-6 bg-gradient-to-br from-[#181b21] to-[#0e1116] border-[#30363d]">
+            <p class="text-[10px] font-black text-[#8a8f98] uppercase tracking-widest mb-1">Promedio Antigüedad</p>
+            <h4 class="text-3xl font-black text-amber-400" id="avgAging">0 Días</h4>
+        </div>
+    </div>
+
+    <!-- GRÁFICOS -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Jefatura -->
+        <div class="ios-card p-6 bg-[#181b21] border-[#30363d]">
+            <h3 class="text-[10px] font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
+                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                Proyectos por Jefatura
+            </h3>
+            <div class="relative h-[300px]">
+                <canvas id="chartJefatura"></canvas>
+            </div>
+        </div>
+
+        <!-- Casuística -->
+        <div class="ios-card p-6 bg-[#181b21] border-[#30363d]">
+            <h3 class="text-[10px] font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
+                <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                Casuística
+            </h3>
+            <div class="relative h-[300px]">
+                <canvas id="chartCasuistica"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <!-- Estado -->
+        <div class="ios-card p-6 bg-[#181b21] border-[#30363d]">
+            <h3 class="text-[10px] font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Estado
+            </h3>
+            <div class="relative h-[250px]">
+                <canvas id="chartEstado"></canvas>
+            </div>
+        </div>
+
+        <!-- Estado de la Obra -->
+        <div class="ios-card p-6 bg-[#181b21] border-[#30363d]">
+            <h3 class="text-[10px] font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
+                <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                Estado de la Obra
+            </h3>
+            <div class="relative h-[250px]">
+                <canvas id="chartEstadoObra"></canvas>
+            </div>
+        </div>
+
+        <!-- Antigüedad -->
+        <div class="ios-card p-6 bg-[#181b21] border-[#30363d]">
+            <h3 class="text-[10px] font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
+                <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Antigüedad (Días)
+            </h3>
+            <div class="relative h-[250px]">
+                <canvas id="chartAntiguedad"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let allPreRegistroProjects = [];
+    let charts = {};
+
+    function normalizeStr(str) {
+        return String(str || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, ' ').trim().toUpperCase();
+    }
+
+    function formatMoney(n) {
+        return 'S/ ' + n.toLocaleString('es-PE', { minimumFractionDigits: 2 });
+    }
+
+    function clearAllFilters() {
+        $('#jefaturaFilter').val('ALL');
+        $('#responsableFilter').val('ALL');
+        updateView();
+    }
+
+    async function init() {
+        const rawData = await fetch('/api/proyectos').then(r => r.json());
+        
+        // Filtrar por MANTENIMIENTO y PRE REGISTRO
+        allPreRegistroProjects = rawData.filter(p => {
+            const negocio = normalizeStr(p['NEGOCIO']);
+            const estadoPlan = normalizeStr(p['ESTADO PLAN']);
+            return negocio === 'MANTENIMIENTO' && estadoPlan === 'PRE REGISTRO';
+        });
+
+        const jefaturas = [...new Set(allPreRegistroProjects.map(p => normalizeStr(p['JEFATURA'] || 'SIN JEFATURA')))].sort();
+        const jfSelect = $('#jefaturaFilter');
+        jefaturas.forEach(j => {
+            jfSelect.append(`<option value="${j}">${j}</option>`);
+        });
+
+        $('#jefaturaFilter').on('change', () => updateView());
+        $('#responsableFilter').on('change', () => updateView());
+        updateView();
+    }
+
+    function updateView() {
+        const selJefatura = $('#jefaturaFilter').val();
+        const selResponsable = $('#responsableFilter').val();
+
+        const filtered = allPreRegistroProjects.filter(p => {
+            const jef = normalizeStr(p['JEFATURA'] || 'SIN JEFATURA');
+            const matchJef = selJefatura === 'ALL' ? true : jef === selJefatura;
+
+            const resp = normalizeStr(p['RESPONSABLE'] || p['EMPRESA COLABORADORA'] || '');
+            const matchResp = selResponsable === 'ALL' ? true : resp === selResponsable;
+
+            return matchJef && matchResp;
+        });
+
+        const totalAmt = filtered.reduce((acc, p) => acc + (parseFloat(p['VALORIZ MANO DE OBRA']) || 0), 0);
+        const totalCnt = filtered.length;
+        const totalAging = filtered.reduce((acc, p) => acc + (parseInt(p['TIMING']) || 0), 0);
+        const avgAging = totalCnt > 0 ? Math.round(totalAging / totalCnt) : 0;
+
+        $('#totalAmount').text(formatMoney(totalAmt));
+        $('#totalCount').text(totalCnt);
+        $('#avgAging').text(avgAging + ' Días');
+
+        renderJefaturaChart(filtered);
+        renderCasuisticaChart(filtered);
+        renderEstadoChart(filtered);
+        renderEstadoObraChart(filtered);
+        renderAntiguedadChart(filtered);
+    }
+
+    const cobraColors = ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#1d4ed8', '#1e40af', '#1e3a8a', '#312e81', '#3730a3', '#4338ca'];
+    const integratelColors = ['#059669', '#10b981', '#34d399', '#6ee7b7', '#047857', '#065f46', '#064e3b', '#14532d', '#166534', '#15803d'];
+    const defaultColors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#f97316', '#6366f1', '#14b8a6'];
+
+    function getThemeColors(resp) {
+        if (resp === 'COBRA') return cobraColors;
+        if (resp === 'INTEGRATEL') return integratelColors;
+        return defaultColors;
+    }
+
+    function createChart(id, type, labels, data, counts, isDonut = false, fullLabels = null) {
+        if (charts[id]) charts[id].destroy();
+        const selResponsable = $('#responsableFilter').val();
+        const themeColors = getThemeColors(selResponsable);
+        
+        const ctx = document.getElementById(id).getContext('2d');
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            onHover: (event, activeElements) => {
+                if (id === 'chartJefatura') {
+                    event.native.target.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
+                }
+            },
+            onClick: function(event, elements) {
+                if (elements.length > 0 && id === 'chartJefatura') {
+                    const index = elements[0].index;
+                    const label = fullLabels ? fullLabels[index] : this.data.labels[index];
+                    $('#jefaturaFilter').val(label).change();
+                }
+            },
+            plugins: {
+                legend: {
+                    display: isDonut,
+                    position: 'right',
+                    labels: { color: '#8a8f98', font: { size: 10, weight: 'bold' }, boxWidth: 8 }
+                },
+                tooltip: {
+                    backgroundColor: '#181b21',
+                    callbacks: {
+                        label: function(context) {
+                            const val = context.raw;
+                            const idx = context.dataIndex;
+                            const cnt = counts ? counts[idx] : null;
+                            let lines = ['Monto: ' + formatMoney(val)];
+                            if (cnt !== null) lines.push('Proyectos: ' + cnt);
+                            return lines;
+                        }
+                    }
+                }
+            },
+            scales: isDonut ? {} : {
+                x: { ticks: { color: '#8a8f98', font: { size: 9 } }, grid: { display: false } },
+                y: { ticks: { color: '#8a8f98', font: { size: 9 } }, grid: { color: '#30363d' } }
+            }
+        };
+
+        if (type === 'bar' && labels.length > 5) options.indexAxis = 'y';
+
+        const mainColor = themeColors[0];
+        const bgColor = type === 'bar' ? (selResponsable === 'ALL' ? 'rgba(59, 130, 246, 0.4)' : `${mainColor}66`) : themeColors;
+
+        charts[id] = new Chart(ctx, {
+            type: type,
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: isDonut ? themeColors : (type === 'bar' ? bgColor : themeColors),
+                    borderColor: isDonut ? '#181b21' : mainColor,
+                    borderWidth: isDonut ? 2 : 2,
+                    borderRadius: type === 'bar' ? 4 : 0,
+                    cutout: isDonut ? '70%' : 0
+                }]
+            },
+            options: options
+        });
+    }
+
+    function renderJefaturaChart(data) {
+        const stats = {};
+        data.forEach(p => {
+            const key = normalizeStr(p['JEFATURA'] || 'SIN JEFATURA');
+            if (!stats[key]) stats[key] = { amt: 0, cnt: 0 };
+            stats[key].amt += (parseFloat(p['VALORIZ MANO DE OBRA']) || 0);
+            stats[key].cnt++;
+        });
+        const sorted = Object.entries(stats).sort((a,b) => b[1].amt - a[1].amt);
+        const labels = sorted.map(e => e[0].length > 15 ? e[0].substring(0, 15) + '...' : e[0]);
+        const fullLabels = sorted.map(e => e[0]);
+        createChart('chartJefatura', 'bar', labels, sorted.map(e => e[1].amt), sorted.map(e => e[1].cnt), false, fullLabels);
+    }
+
+    function renderCasuisticaChart(data) {
+        const stats = {};
+        data.forEach(p => {
+            const key = normalizeStr(p['CASUISTICA'] || 'SIN CASUÍSTICA');
+            if (!stats[key]) stats[key] = { amt: 0, cnt: 0 };
+            stats[key].amt += (parseFloat(p['VALORIZ MANO DE OBRA']) || 0);
+            stats[key].cnt++;
+        });
+        const sorted = Object.entries(stats).sort((a,b) => b[1].amt - a[1].amt).slice(0, 10);
+        createChart('chartCasuistica', 'bar', sorted.map(e => e[0]), sorted.map(e => e[1].amt), sorted.map(e => e[1].cnt));
+    }
+
+    function renderEstadoChart(data) {
+        const stats = {};
+        data.forEach(p => {
+            const key = normalizeStr(p['ESTADO'] || 'SIN ESTADO');
+            if (!stats[key]) stats[key] = { amt: 0, cnt: 0 };
+            stats[key].amt += (parseFloat(p['VALORIZ MANO DE OBRA']) || 0);
+            stats[key].cnt++;
+        });
+        const sorted = Object.entries(stats).sort((a,b) => b[1].amt - a[1].amt);
+        createChart('chartEstado', 'doughnut', sorted.map(e => e[0]), sorted.map(e => e[1].amt), sorted.map(e => e[1].cnt), true);
+    }
+
+    function renderEstadoObraChart(data) {
+        const stats = {};
+        data.forEach(p => {
+            const key = normalizeStr(p['ESTADO DE LA OBRA'] || 'SIN ESTADO OBRA');
+            if (!stats[key]) stats[key] = { amt: 0, cnt: 0 };
+            stats[key].amt += (parseFloat(p['VALORIZ MANO DE OBRA']) || 0);
+            stats[key].cnt++;
+        });
+        const sorted = Object.entries(stats).sort((a,b) => b[1].amt - a[1].amt);
+        createChart('chartEstadoObra', 'doughnut', sorted.map(e => e[0]), sorted.map(e => e[1].amt), sorted.map(e => e[1].cnt), true);
+    }
+
+    function renderAntiguedadChart(data) {
+        const ranges = { '0-7 Días': 0, '8-15 Días': 0, '16-30 Días': 0, '+30 Días': 0 };
+        const counts = { '0-7 Días': 0, '8-15 Días': 0, '16-30 Días': 0, '+30 Días': 0 };
+        data.forEach(p => {
+            const days = parseInt(p['TIMING']) || 0;
+            const amt = (parseFloat(p['VALORIZ MANO DE OBRA']) || 0);
+            if (days <= 7) { ranges['0-7 Días'] += amt; counts['0-7 Días']++; }
+            else if (days <= 15) { ranges['8-15 Días'] += amt; counts['8-15 Días']++; }
+            else if (days <= 30) { ranges['16-30 Días'] += amt; counts['16-30 Días']++; }
+            else { ranges['+30 Días'] += amt; counts['+30 Días']++; }
+        });
+        createChart('chartAntiguedad', 'bar', Object.keys(ranges), Object.values(ranges), Object.values(counts));
+    }
+
+    $(document).ready(() => init());
+</script>
+{% endblock %}

@@ -232,6 +232,7 @@
         else $('#topDebtor').text('---');
 
         const labels = sorted.map(e => e[0].length > 15 ? e[0].substring(0, 15) + '...' : e[0]);
+        const fullLabels = sorted.map(e => e[0]);
         const amounts = sorted.map(e => e[1].amt);
         const counts = sorted.map(e => e[1].cnt);
 
@@ -244,6 +245,7 @@
                     label: 'Monto Pendiente',
                     data: amounts,
                     counts: counts,
+                    fullLabels: fullLabels,
                     backgroundColor: 'rgba(59, 130, 246, 0.4)',
                     borderColor: '#3b82f6',
                     borderWidth: 2,
@@ -253,6 +255,16 @@
             options: {
                 indexAxis: 'y',
                 maintainAspectRatio: false,
+                onHover: (event, activeElements) => {
+                    event.native.target.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
+                },
+                onClick: function(event, elements) {
+                    if (elements.length > 0) {
+                        const index = elements[0].index;
+                        const label = this.data.datasets[0].fullLabels[index];
+                        $('#jefaturaFilter').val(label).change();
+                    }
+                },
                 plugins: { 
                     legend: { display: false },
                     tooltip: { callbacks: getTooltipCallback() }

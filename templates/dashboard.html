@@ -749,6 +749,7 @@
             let name = e[0].length > 20 ? e[0].substring(0, 20) + '...' : e[0];
             return `${name} (${e[1].count})`;
         });
+        const fullLabels = entries.map(e => e[0]);
         const values = entries.map(e => e[1].sum);
 
         const baseColors = [
@@ -763,6 +764,7 @@
                 labels: labels,
                 datasets: [{
                     data: values,
+                    fullLabels: fullLabels,
                     backgroundColor: baseColors.slice(0, values.length),
                     borderColor: '#181b21',
                     borderWidth: 3,
@@ -773,6 +775,16 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 cutout: '65%',
+                onHover: (event, activeElements) => {
+                    event.native.target.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
+                },
+                onClick: function(event, elements) {
+                    if (elements.length > 0) {
+                        const index = elements[0].index;
+                        const label = this.data.datasets[0].fullLabels[index];
+                        $('#jefaturaFilter').val(label).change();
+                    }
+                },
                 plugins: {
                     legend: {
                         position: 'right',
