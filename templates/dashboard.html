@@ -6,18 +6,28 @@
 <div class="p-12 max-w-7xl mx-auto">
     <div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-            <h2 class="text-4xl font-extrabold tracking-tight text-white uppercase">Dashboard</h2>
-            <p class="text-lg font-medium text-[#8a8f98]">Estado de proyectos segmentado por línea y responsable.</p>
+            <h2 class="text-4xl font-extrabold tracking-tight text-white uppercase">Operaciones</h2>
+            <p class="text-lg font-medium text-[#8a8f98]">Estado de proyectos operativos (Excluye Validación).</p>
         </div>
         
-        <!-- Filtro de Jefatura -->
+        <!-- Filtros -->
         <div class="w-full md:w-auto flex flex-col md:flex-row items-end gap-4">
-            <div class="w-full md:w-72">
+            <div class="w-full md:w-56">
                 <label class="text-[10px] font-black uppercase text-[#8a8f98] mb-2 block flex items-center gap-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-[#2563eb]"></span> Filtrar por Jefatura
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#3b82f6]"></span> Filtrar por Jefatura
                 </label>
                 <select id="jefaturaFilter" class="w-full bg-[#181b21] border border-[#30363d] text-[#c9d1d9] rounded-md px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-[#3b82f6]/20 transition-all">
                     <option value="ALL">TODAS LAS JEFATURAS</option>
+                </select>
+            </div>
+            <div class="w-full md:w-56">
+                <label class="text-[10px] font-black uppercase text-[#8a8f98] mb-2 block flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#f59e0b]"></span> Filtrar por Negocio
+                </label>
+                <select id="negocioFilter" class="w-full bg-[#181b21] border border-[#30363d] text-[#c9d1d9] rounded-md px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-[#f59e0b]/20 transition-all">
+                    <option value="ALL">TODOS LOS NEGOCIOS</option>
+                    <option value="MANTENIMIENTO">MANTENIMIENTO</option>
+                    <option value="INGENIERIA">INGENIERÍA</option>
                 </select>
             </div>
             <button onclick="clearAllFilters()" class="px-6 py-3 bg-[#181b21] border border-[#30363d] text-[#8a8f98] hover:text-white hover:border-[#4b5563] rounded-md text-[10px] font-black uppercase tracking-widest transition-all h-[46px]">
@@ -27,7 +37,7 @@
     </div>
 
     <!-- MANTENIMIENTO -->
-    <div class="mb-16">
+    <div id="seccionMantenimiento" class="mb-16">
         <div class="flex items-center gap-4 mb-8">
             <div class="w-12 h-12 bg-[#3b82f6] rounded-md flex items-center justify-center text-white">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
@@ -117,7 +127,7 @@
     </div>
 
     <!-- INGENIERÍA -->
-    <div class="mb-12">
+    <div id="seccionIngenieria" class="mb-12">
         <div class="flex items-center gap-4 mb-8">
             <div class="w-12 h-12 bg-[#3b82f6] rounded-md flex items-center justify-center text-white">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
@@ -216,6 +226,7 @@
     function clearAllFilters() {
         currentEstadoFilter = null;
         $('#jefaturaFilter').val('ALL');
+        $('#negocioFilter').val('ALL');
         updateDashboardView();
     }
 
@@ -238,16 +249,38 @@
         jefaturas.forEach(j => jefSel.append(`<option value="${j}">${j}</option>`));
 
         jefSel.off('change').on('change', () => updateDashboardView());
+        $('#negocioFilter').off('change').on('change', () => updateDashboardView());
 
         updateDashboardView();
     }
 
     function updateDashboardView() {
         const selectedJef = $('#jefaturaFilter').val();
+        const selectedNeg = $('#negocioFilter').val();
         
-        const filteredProjects = selectedJef === 'ALL' 
+        // Hide or show visual sections based on selectedNegocio
+        if (selectedNeg === 'MANTENIMIENTO') {
+            $('#seccionMantenimiento').show();
+            $('#seccionIngenieria').hide();
+        } else if (selectedNeg === 'INGENIERIA') {
+            $('#seccionMantenimiento').hide();
+            $('#seccionIngenieria').show();
+        } else {
+            $('#seccionMantenimiento').show();
+            $('#seccionIngenieria').show();
+        }
+        
+        let filteredProjects = (selectedJef === 'ALL' 
             ? allProcessedProjects 
-            : allProcessedProjects.filter(p => String(p['JEFATURA'] || '').trim() === selectedJef);
+            : allProcessedProjects.filter(p => String(p['JEFATURA'] || '').trim() === selectedJef))
+            .filter(p => String(p['AREA'] || '').trim().toUpperCase() !== 'VALIDACIÓN');
+
+        if (selectedNeg !== 'ALL') {
+            filteredProjects = filteredProjects.filter(p => {
+                const val = String(p['NEGOCIO'] || '').trim().toUpperCase();
+                return selectedNeg === 'MANTENIMIENTO' ? val === 'MANTENIMIENTO' : (val === 'INGENIERIA' || val === 'INGENIERÍA');
+            });
+        }
 
         // Sub-filtro por Estado Plan (para gráficos y totales, NO para la pipeline misma)
         const projectsForStats = !currentEstadoFilter 

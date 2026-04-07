@@ -235,6 +235,11 @@ def route_usuarios():
 def route_dashboard():
     return render_template('dashboard.html')
 
+@app.route('/pdt_pago')
+@login_required
+def route_pdt_pago():
+    return render_template('pdt_pago.html')
+
 @app.route('/cerradas')
 @login_required
 def route_cerradas():

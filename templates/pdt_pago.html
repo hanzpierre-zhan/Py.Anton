@@ -1,0 +1,454 @@
+{% extends 'base.html' %}
+
+{% block title %}Pendientes de Pago{% endblock %}
+
+{% block content %}
+<div class="p-12 max-w-7xl mx-auto">
+    <div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+            <h2 class="text-4xl font-extrabold tracking-tight text-white uppercase">Pendientes de Pago</h2>
+            <p class="text-lg font-medium text-[#8a8f98]">Proyectos en Validación pendientes de pago agrupados por Jefatura y Antigüedad.</p>
+        </div>
+        
+        <div class="w-full md:w-auto flex flex-col md:flex-row items-end gap-4">
+            <div class="w-full md:w-56">
+                <label class="text-[10px] font-black uppercase text-[#8a8f98] mb-2 block flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#3b82f6]"></span> Filtrar por Jefatura
+                </label>
+                <select id="jefaturaFilter" class="w-full bg-[#181b21] border border-[#30363d] text-[#c9d1d9] rounded-md px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-[#3b82f6]/20 transition-all">
+                    <option value="ALL">TODAS LAS JEFATURAS</option>
+                </select>
+            </div>
+            <div class="w-full md:w-56">
+                <label class="text-[10px] font-black uppercase text-[#8a8f98] mb-2 block flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#f59e0b]"></span> Filtrar por Negocio
+                </label>
+                <select id="negocioFilter" class="w-full bg-[#181b21] border border-[#30363d] text-[#c9d1d9] rounded-md px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-[#f59e0b]/20 transition-all">
+                    <option value="ALL">TODOS LOS NEGOCIOS</option>
+                    <option value="MANTENIMIENTO">MANTENIMIENTO</option>
+                    <option value="INGENIERIA">INGENIERÍA</option>
+                </select>
+            </div>
+            <button onclick="clearAllFilters()" class="px-6 py-3 bg-[#181b21] border border-[#30363d] text-[#8a8f98] hover:text-white hover:border-[#4b5563] rounded-md text-[10px] font-black uppercase tracking-widest transition-all h-[46px]">
+                Limpiar Filtros
+            </button>
+        </div>
+    </div>
+
+    <!-- RESUMEN GLOBAL -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <div class="ios-card p-6 bg-gradient-to-br from-[#181b21] to-[#0e1116] border-[#30363d]">
+            <p class="text-[10px] font-black text-[#8a8f98] uppercase tracking-widest mb-1">Total Pendiente</p>
+            <h4 class="text-3xl font-black text-rose-500" id="totalAmount">S/ 0.00</h4>
+        </div>
+        <div class="ios-card p-6 bg-gradient-to-br from-[#181b21] to-[#0e1116] border-[#30363d]">
+            <p class="text-[10px] font-black text-[#8a8f98] uppercase tracking-widest mb-1">Proyectos Pendientes</p>
+            <h4 class="text-3xl font-black text-white" id="totalCount">0</h4>
+        </div>
+        <div class="ios-card p-6 bg-gradient-to-br from-[#181b21] to-[#0e1116] border-[#30363d]">
+            <p class="text-[10px] font-black text-[#8a8f98] uppercase tracking-widest mb-1">Mayor Deudor (Jefatura)</p>
+            <h4 class="text-xl font-black text-amber-400 uppercase truncate" id="topDebtor">---</h4>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Gráfico Jefaturas -->
+        <div class="ios-card p-5 bg-[#181b21] border-[#30363d]">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-2">
+                    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                    Pendiente por Jefatura
+                </h3>
+            </div>
+            <div class="relative h-[250px]">
+                <canvas id="chartJefatura"></canvas>
+            </div>
+        </div>
+
+        <!-- Gráfico Tipo de Obra -->
+        <div class="ios-card p-5 bg-[#181b21] border-[#30363d]">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-2">
+                    <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    Pendiente por Tipo de Obra
+                </h3>
+            </div>
+            <div class="relative h-[250px]">
+                <canvas id="chartTipoObra"></canvas>
+            </div>
+        </div>
+
+        <!-- Gráfico Estado Plan -->
+        <div class="ios-card p-5 bg-[#181b21] border-[#30363d]">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-2">
+                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    Estado Plan
+                </h3>
+            </div>
+            <div class="relative h-[250px]">
+                <canvas id="chartEstadoPlan"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Gráfico Antigüedad -->
+        <div class="ios-card p-5 bg-[#181b21] border-[#30363d]">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-2">
+                    <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Antigüedad de Deuda (Días)
+                </h3>
+            </div>
+            <div class="relative h-[250px]">
+                <canvas id="chartAging"></canvas>
+            </div>
+        </div>
+
+        <!-- Gráfico Situación -->
+        <div class="ios-card p-5 bg-[#181b21] border-[#30363d]">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-2">
+                    <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    Situación
+                </h3>
+            </div>
+            <div class="relative h-[250px]">
+                <canvas id="chartSituacion"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let allPdtProjects = [];
+    let charts = {};
+
+    function normalizeStr(str) {
+        return String(str || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, ' ').trim().toUpperCase();
+    }
+
+    function clearAllFilters() {
+        $('#negocioFilter').val('ALL');
+        $('#jefaturaFilter').val('ALL');
+        updateView();
+    }
+
+    async function init() {
+        const rawData = await fetch('/api/proyectos').then(r => r.json());
+        
+        // Filtrado Inicial: AREA = 'Validación' + Estados/Situaciones específicos
+        const targetStates = ['EN CERTIFICACION', 'VALIDADO NIVEL 1', 'VALIDADO NIVEL 2'];
+        allPdtProjects = rawData.filter(p => {
+            const area = normalizeStr(p['AREA']);
+            const estado = normalizeStr(p['ESTADO PLAN']);
+            const situacion = normalizeStr(p['SITUACION']);
+            return area === 'VALIDACION' && (targetStates.includes(estado) || targetStates.includes(situacion));
+        });
+
+        // Poblar el filtro de Jefatura
+        const jefaturas = [...new Set(allPdtProjects.map(p => normalizeStr(p['JEFATURA'] || 'SIN JEFATURA')))].sort();
+        const jfSelect = $('#jefaturaFilter');
+        jefaturas.forEach(j => {
+            jfSelect.append(`<option value="${j}">${j}</option>`);
+        });
+
+        $('#negocioFilter').on('change', () => updateView());
+        $('#jefaturaFilter').on('change', () => updateView());
+        updateView();
+    }
+    function updateView() {
+        const selNegocio = $('#negocioFilter').val();
+        const selJefatura = $('#jefaturaFilter').val();
+        
+        const filtered = allPdtProjects.filter(p => {
+            const neg = normalizeStr(p['NEGOCIO']);
+            const matchNeg = selNegocio === 'ALL' ? true : (selNegocio === 'MANTENIMIENTO' ? neg === 'MANTENIMIENTO' : (neg === 'INGENIERIA' || neg === 'INGENIERIA'));
+            
+            const jef = normalizeStr(p['JEFATURA'] || 'SIN JEFATURA');
+            const matchJef = selJefatura === 'ALL' ? true : jef === selJefatura;
+            
+            return matchNeg && matchJef;
+        });
+
+        const totalAmt = filtered.reduce((acc, p) => acc + (parseFloat(p['VALORIZ MANO DE OBRA']) || 0), 0);
+        const totalCnt = filtered.length;
+
+        $('#totalAmount').text('S/ ' + totalAmt.toLocaleString('es-PE', { minimumFractionDigits: 2 }));
+        $('#totalCount').text(totalCnt);
+
+        renderAgingChart(filtered);
+        renderJefaturaChart(filtered);
+        renderTipoObraChart(filtered);
+        renderEstadoPlanChart(filtered);
+        renderSituacionChart(filtered);
+    }
+
+    function getTooltipCallback() {
+        return {
+            label: function(context) {
+                const dataIndex = context.dataIndex;
+                const dataset = context.dataset;
+                const value = dataset.data[dataIndex];
+                
+                // Si el dataset tiene sus propios arreglos de counts/amounts
+                const count = dataset.counts ? dataset.counts[dataIndex] : null;
+                const amount = dataset.amounts ? dataset.amounts[dataIndex] : null;
+                
+                let lines = [];
+                // Si no hay arreglos específicos, usamos el valor del dataset dependiendo de su label
+                if (amount !== null) {
+                    lines.push('Monto: S/ ' + amount.toLocaleString('es-PE', { minimumFractionDigits: 2 }));
+                } else if (dataset.label && dataset.label.includes('Monto')) {
+                    lines.push('Monto: S/ ' + value.toLocaleString('es-PE', { minimumFractionDigits: 2 }));
+                }
+
+                if (count !== null) {
+                    lines.push('Cantidad: ' + count + ' proy.');
+                } else if (dataset.label && dataset.label.includes('Cantidad')) {
+                    lines.push('Cantidad: ' + value + ' proy.');
+                }
+                
+                return lines;
+            }
+        };
+    }
+
+    function renderJefaturaChart(data) {
+        if (charts.jefatura) charts.jefatura.destroy();
+        
+        const stats = {};
+        data.forEach(p => {
+            const jef = String(p['JEFATURA'] || 'SIN JEFATURA').trim().toUpperCase();
+            if (!stats[jef]) stats[jef] = { amt: 0, cnt: 0 };
+            stats[jef].amt += (parseFloat(p['VALORIZ MANO DE OBRA']) || 0);
+            stats[jef].cnt += 1;
+        });
+
+        const sorted = Object.entries(stats).sort((a,b) => b[1].amt - a[1].amt);
+        if (sorted.length > 0) $('#topDebtor').text(sorted[0][0]);
+        else $('#topDebtor').text('---');
+
+        const labels = sorted.map(e => e[0].length > 15 ? e[0].substring(0, 15) + '...' : e[0]);
+        const amounts = sorted.map(e => e[1].amt);
+        const counts = sorted.map(e => e[1].cnt);
+
+        const ctx = document.getElementById('chartJefatura').getContext('2d');
+        charts.jefatura = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Monto Pendiente',
+                    data: amounts,
+                    counts: counts,
+                    backgroundColor: 'rgba(59, 130, 246, 0.4)',
+                    borderColor: '#3b82f6',
+                    borderWidth: 2,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: { callbacks: getTooltipCallback() }
+                },
+                scales: {
+                    x: { ticks: { color: '#8a8f98', font: { size: 9 } }, grid: { color: '#30363d' } },
+                    y: { ticks: { color: '#ffffff', font: { size: 9, weight: 'bold' } }, grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    function renderAgingChart(data) {
+        if (charts.aging) charts.aging.destroy();
+
+        const ranges = {
+            '0-30 días': { amt: 0, cnt: 0 },
+            '31-60 días': { amt: 0, cnt: 0 },
+            '61-120 días': { amt: 0, cnt: 0 },
+            '+120 días': { amt: 0, cnt: 0 }
+        };
+
+        data.forEach(p => {
+            const days = parseInt(p['TIMING']) || 0;
+            const amt = (parseFloat(p['VALORIZ MANO DE OBRA']) || 0);
+            if (days <= 30) { ranges['0-30 días'].amt += amt; ranges['0-30 días'].cnt++; }
+            else if (days <= 60) { ranges['31-60 días'].amt += amt; ranges['31-60 días'].cnt++; }
+            else if (days <= 120) { ranges['61-120 días'].amt += amt; ranges['61-120 días'].cnt++; }
+            else { ranges['+120 días'].amt += amt; ranges['+120 días'].cnt++; }
+        });
+
+        const labels = Object.keys(ranges);
+        const amounts = labels.map(l => ranges[l].amt);
+        const counts = labels.map(l => ranges[l].cnt);
+
+        const ctx = document.getElementById('chartAging').getContext('2d');
+        charts.aging = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Monto Pendiente',
+                    data: amounts,
+                    counts: counts,
+                    backgroundColor: ['#10b981', '#f59e0b', '#f43f5e', '#ec4899'],
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: { callbacks: getTooltipCallback() }
+                },
+                scales: {
+                    x: { ticks: { color: '#8a8f98', font: { weight: 'bold', size: 10 } }, grid: { display: false } },
+                    y: { ticks: { color: '#8a8f98', font: { size: 10 } }, grid: { color: '#30363d' } }
+                }
+            }
+        });
+    }
+
+    function renderTipoObraChart(data) {
+        if (charts.tipoObra) charts.tipoObra.destroy();
+        
+        const stats = {};
+        data.forEach(p => {
+            const tipo = String(p['TIPO DE OBRA'] || 'SIN TIPO').trim().toUpperCase();
+            if (!stats[tipo]) stats[tipo] = { amt: 0, cnt: 0 };
+            stats[tipo].amt += (parseFloat(p['VALORIZ MANO DE OBRA']) || 0);
+            stats[tipo].cnt += 1;
+        });
+
+        const sorted = Object.entries(stats).sort((a,b) => b[1].amt - a[1].amt).slice(0, 10);
+        const labels = sorted.map(e => e[0]);
+        const amounts = sorted.map(e => e[1].amt);
+        const counts = sorted.map(e => e[1].cnt);
+
+        const ctx = document.getElementById('chartTipoObra').getContext('2d');
+        charts.tipoObra = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Monto',
+                    data: amounts,
+                    counts: counts,
+                    backgroundColor: ['#f59e0b', '#10b981', '#06b6d4', '#6366f1', '#f43f5e', '#8b5cf6', '#a855f7', '#14b8a6', '#4b5563', '#1e293b'],
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: getTooltipCallback() }
+                },
+                scales: {
+                    x: { ticks: { color: '#8a8f98', font: { size: 9 } }, grid: { color: '#30363d' } },
+                    y: { ticks: { color: '#ffffff', font: { size: 9, weight: 'bold' } }, grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    function renderEstadoPlanChart(data) {
+        if (charts.estadoPlan) charts.estadoPlan.destroy();
+
+        const stats = {};
+        data.forEach(p => {
+            let est = String(p['ESTADO PLAN'] || 'SIN ESTADO').trim().toUpperCase();
+            if(!stats[est]) stats[est] = { amt: 0, cnt: 0 };
+            stats[est].amt += (parseFloat(p['VALORIZ MANO DE OBRA']) || 0);
+            stats[est].cnt += 1;
+        });
+
+        const sorted = Object.entries(stats).sort((a,b) => b[1].amt - a[1].amt);
+        const labels = sorted.map(e => e[0].length > 18 ? e[0].substring(0, 18) + '...' : e[0]);
+        const amounts = sorted.map(e => e[1].amt);
+        const counts = sorted.map(e => e[1].cnt);
+
+        const ctx = document.getElementById('chartEstadoPlan').getContext('2d');
+        charts.estadoPlan = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Monto Pendiente',
+                    data: amounts,
+                    counts: counts,
+                    backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#06b6d4', '#8b5cf6', '#ec4899'],
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: getTooltipCallback() }
+                },
+                scales: {
+                    x: { ticks: { color: '#8a8f98', font: { weight: 'bold', size: 9 } }, grid: { display: false } },
+                    y: { ticks: { color: '#8a8f98', font: { size: 9 } }, grid: { color: '#30363d' } }
+                }
+            }
+        });
+    }
+
+    function renderSituacionChart(data) {
+        if (charts.situacion) charts.situacion.destroy();
+
+        const stats = {};
+        data.forEach(p => {
+            let sit = normalizeStr(p['SITUACION'] || 'SIN SITUACION');
+            if (sit === 'SIN SITUACION') sit = 'SIN SITUACIÓN';
+            else if (sit) sit = p['SITUACION'].toUpperCase(); // Mantener el texto original en mayúsculas si existe
+            
+            if (!stats[sit]) stats[sit] = { amt: 0, cnt: 0 };
+            stats[sit].amt += (parseFloat(p['VALORIZ MANO DE OBRA']) || 0);
+            stats[sit].cnt += 1;
+        });
+
+        const sorted = Object.entries(stats).sort((a,b) => b[1].amt - a[1].amt).slice(0, 10);
+        const labels = sorted.map(e => e[0].length > 18 ? e[0].substring(0, 18) + '...' : e[0]);
+        const amounts = sorted.map(e => e[1].amt);
+        const counts = sorted.map(e => e[1].cnt);
+
+        const ctx = document.getElementById('chartSituacion').getContext('2d');
+        charts.situacion = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Monto Pendiente',
+                    data: amounts,
+                    counts: counts,
+                    backgroundColor: ['#6366f1', '#f43f5e', '#8b5cf6', '#a855f7', '#14b8a6', '#06b6d4', '#4b5563', '#1e293b', '#f59e0b', '#10b981'],
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: getTooltipCallback() }
+                },
+                scales: {
+                    x: { ticks: { color: '#8a8f98', font: { size: 9 } }, grid: { color: '#30363d' } },
+                    y: { ticks: { color: '#ffffff', font: { size: 9, weight: 'bold' } }, grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    $(document).ready(() => init());
+</script>
+{% endblock %}
